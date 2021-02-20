@@ -121,7 +121,7 @@ h3.impl, h3.method, h3.type {
 
 h1, h2, h3, h4,
 .sidebar, a.source, .search-input, .content table td:first-child > a,
-.collapse-toggle, div.item-list .out-of-band,
+.collapse-toggle, div.item-list .out-of-band, details > summary,
 #source-sidebar, #sidebar-toggle,
 /* This selector is for the items listed in the "all items" page. */
 #main > ul.docblock > li > a {
@@ -1756,12 +1756,13 @@ div.name.expand::before {
 	margin-left: 4em;
 }
 
-details[open] > summary {
-	float: left;
-	margin-left: -20px;
+details > summary {
 	font-size: 20px;
 }
+
+details[open] > summary {
+	float: left;
+}
 details[open] > summary > span {
-	background-color: red;
 	display: none;
 }
