@@ -1755,3 +1755,12 @@ div.name.expand::before {
 .type-decl > pre > .docblock.attributes {
 	margin-left: 4em;
 }
+
+details[open] > summary {
+	float: left;
+	margin-left: -20px;
+}
+details[open] > summary > span {
+	background-color: red;
+	display: none;
+}
