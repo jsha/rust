@@ -1695,10 +1695,11 @@ fn wrap_into_docblock<F>(w: &mut Buffer, f: F)
 where
     F: FnOnce(&mut Buffer),
 {
-    w.write_str("<details class=\"docblock type-decl\">");
-    w.write_str("<summary class=\"toggle-label\">Show declaration</summary>");
+    w.write_str("<details>");
+    w.write_str("<summary class=\"toggle-label\"><span>Show declaration</span></summary>");
+    w.write_str("<div class=\"docblock type-decl\">");
     f(w);
-    w.write_str("</details>")
+    w.write_str("</div></details>")
 }
 
 fn print_item(cx: &Context<'_>, item: &clean::Item, buf: &mut Buffer) {

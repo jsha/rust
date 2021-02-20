@@ -1759,6 +1759,7 @@ div.name.expand::before {
 details[open] > summary {
 	float: left;
 	margin-left: -20px;
+	font-size: 20px;
 }
 details[open] > summary > span {
 	background-color: red;
