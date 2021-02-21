@@ -1757,11 +1757,39 @@ div.name.expand::before {
 }
 
 details > summary {
+	cursor: pointer;
 	font-size: 20px;
+}
+
+details > summary::-webkit-details-marker {
+	display: none;
+}
+
+details > summary > .show-decl {
+	padding-left: 10px;
+}
+
+details > summary > .plus,
+details > summary > .minus {
+	font-weight: 300;
+	font-size: 16px;
+}
+
+details > summary > .minus {
+	display: none;
 }
 
 details[open] > summary {
 	float: left;
+}
+details[open] > summary > span {
+	display: none;
+}
+
+details[open] > summary > .minus {
+	display: inline;
+	top: -8px;
+	position: relative;
 }
 details[open] > summary > span {
 	display: none;
