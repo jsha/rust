@@ -1766,14 +1766,16 @@ details > summary::-webkit-details-marker {
 }
 
 details > summary > .show-decl {
-	padding-left: 10px;
+	padding-left: 5px;
 }
 
-details > summary > .show-decl::before {
+details > summary::before {
 	content: "[+]";
-	display: none;
 	font-weight: 300;
 	font-size: 16px;
+	color: #999;
+	letter-spacing: 1px;
+	position: relative;
 }
 
 details[open] > summary {
@@ -1783,13 +1785,10 @@ details[open] > summary > span {
 	display: none;
 }
 
-details[open] > summary > .show-decl::before {
+details[open] > summary::before {
+	content: "[−]";
 	display: inline;
 	top: -8px;
-	position: relative;
-	font-weight: 300;
-	font-size: 16px;
-	content: "[−]";
 }
 details[open] > summary > span {
 	display: none;

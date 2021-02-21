@@ -2665,8 +2665,8 @@ function defocusSearchBar() {
             }
         }
 
-        // onEachLazy(document.getElementsByClassName("docblock"), buildToggleWrapper);
-        // onEachLazy(document.getElementsByClassName("sub-variant"), buildToggleWrapper);
+        onEachLazy(document.getElementsByClassName("docblock"), buildToggleWrapper); //
+        onEachLazy(document.getElementsByClassName("sub-variant"), buildToggleWrapper); //
 
         autoCollapse(getSettingValue("collapse") === "true");
 
