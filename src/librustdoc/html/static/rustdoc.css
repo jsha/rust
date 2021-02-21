@@ -1769,14 +1769,11 @@ details > summary > .show-decl {
 	padding-left: 10px;
 }
 
-details > summary > .plus,
-details > summary > .minus {
+details > summary > .show-decl::before {
+	content: "[+]";
+	display: none;
 	font-weight: 300;
 	font-size: 16px;
-}
-
-details > summary > .minus {
-	display: none;
 }
 
 details[open] > summary {
@@ -1786,10 +1783,13 @@ details[open] > summary > span {
 	display: none;
 }
 
-details[open] > summary > .minus {
+details[open] > summary > .show-decl::before {
 	display: inline;
 	top: -8px;
 	position: relative;
+	font-weight: 300;
+	font-size: 16px;
+	content: "[−]";
 }
 details[open] > summary > span {
 	display: none;
