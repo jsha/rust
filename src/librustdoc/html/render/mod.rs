@@ -1696,7 +1696,9 @@ where
     F: FnOnce(&mut Buffer),
 {
     w.write_str("<details>");
-    w.write_str("<summary><span class=\"toggle-label show-decl\">Show declaration</span></summary>");
+    w.write_str(
+        "<summary><span class=\"toggle-label show-decl\">Show declaration</span></summary>",
+    );
     w.write_str("<div class=\"docblock type-decl\">");
     f(w);
     w.write_str("</div></details>")
