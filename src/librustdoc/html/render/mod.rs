@@ -3323,7 +3323,7 @@ fn render_attributes(w: &mut Buffer, it: &clean::Item, top: bool) {
     if !attrs.is_empty() {
         write!(
             w,
-            "<span class=\"docblock attributes{}\">{}</span>",
+            "<details class=\"docblock attributes{}\"><summary class=\"hideme\"><span>Expand&nbsp;attributes</span></summary>{}</details>",
             if top { " top-attr" } else { "" },
             &attrs
         );
