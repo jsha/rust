@@ -2676,37 +2676,37 @@ function defocusSearchBar() {
         }
     }());
 
-    function createToggleWrapper(tog) {
-        var span = document.createElement("span");
-        span.className = "toggle-label";
-        span.style.display = "none";
-        span.innerHTML = "&nbsp;Expand&nbsp;attributes";
-        tog.appendChild(span);
+    // function createToggleWrapper(tog) {
+    //     var span = document.createElement("span");
+    //     span.className = "toggle-label";
+    //     span.style.display = "none";
+    //     span.innerHTML = "&nbsp;Expand&nbsp;attributes";
+    //     tog.appendChild(span);
 
-        var wrapper = document.createElement("div");
-        wrapper.className = "toggle-wrapper toggle-attributes";
-        wrapper.appendChild(tog);
-        return wrapper;
-    }
+    //     var wrapper = document.createElement("div");
+    //     wrapper.className = "toggle-wrapper toggle-attributes";
+    //     wrapper.appendChild(tog);
+    //     return wrapper;
+    // }
 
-    (function() {
-        // To avoid checking on "rustdoc-item-attributes" value on every loop...
-        var itemAttributesFunc = function() {};
-        if (getSettingValue("auto-hide-attributes") !== "false") {
-            itemAttributesFunc = function(x) {
-                collapseDocs(x.previousSibling.childNodes[0], "toggle");
-            };
-        }
-        var attributesToggle = createToggleWrapper(createSimpleToggle(false));
-        onEachLazy(main.getElementsByClassName("attributes"), function(i_e) {
-            var attr_tog = attributesToggle.cloneNode(true);
-            if (hasClass(i_e, "top-attr") === true) {
-                addClass(attr_tog, "top-attr");
-            }
-            i_e.parentNode.insertBefore(attr_tog, i_e);
-            itemAttributesFunc(i_e);
-        });
-    }());
+    // (function() {
+    //     // To avoid checking on "rustdoc-item-attributes" value on every loop...
+    //     var itemAttributesFunc = function() {};
+    //     if (getSettingValue("auto-hide-attributes") !== "false") {
+    //         itemAttributesFunc = function(x) {
+    //             collapseDocs(x.previousSibling.childNodes[0], "toggle");
+    //         };
+    //     }
+    //     var attributesToggle = createToggleWrapper(createSimpleToggle(false));
+    //     onEachLazy(main.getElementsByClassName("attributes"), function(i_e) {
+    //         var attr_tog = attributesToggle.cloneNode(true);
+    //         if (hasClass(i_e, "top-attr") === true) {
+    //             addClass(attr_tog, "top-attr");
+    //         }
+    //         i_e.parentNode.insertBefore(attr_tog, i_e);
+    //         itemAttributesFunc(i_e);
+    //     });
+    // }());
 
     (function() {
         // To avoid checking on "rustdoc-line-numbers" value on every loop...
