@@ -1695,13 +1695,12 @@ fn wrap_into_docblock<F>(w: &mut Buffer, f: F)
 where
     F: FnOnce(&mut Buffer),
 {
-    w.write_str("<details>");
+    w.write_str("<details class=\"docblock type-decl\">");
     w.write_str(
-        "<summary><span class=\"toggle-label show-decl\">Show declaration</span></summary>",
+        "<summary class=\"toggle-label show-decl hideme\"><span>Show declaration</span></summary>",
     );
-    w.write_str("<div class=\"docblock type-decl\">");
     f(w);
-    w.write_str("</div></details>")
+    w.write_str("</details>")
 }
 
 fn print_item(cx: &Context<'_>, item: &clean::Item, buf: &mut Buffer) {
@@ -1892,7 +1891,7 @@ fn document_short(
 
         write!(
             w,
-            "<div class='docblock{}'>{}{}</div>",
+            "<details open class='docblock{}'><summary class=\"hideme\"><span>Expandd description</span></summary>{}{}</details>",
             if is_hidden { " hidden" } else { "" },
             prefix,
             summary_html,
@@ -1900,7 +1899,7 @@ fn document_short(
     } else if !prefix.is_empty() {
         write!(
             w,
-            "<div class=\"docblock{}\">{}</div>",
+            "<details open class=\"docblock{}\"><summary class=\"hideme\"><span>Expanddd description</span></summary>{}</details>",
             if is_hidden { " hidden" } else { "" },
             prefix
         );
@@ -1919,12 +1918,13 @@ fn document_full(
         render_markdown(w, cx, &*s, item.links(&cx.cache), prefix, is_hidden);
     } else if !prefix.is_empty() {
         if is_hidden {
-            w.write_str("<div class=\"docblock hidden\">");
+            w.write_str("<details class=\"docblock hidden\">");
         } else {
-            w.write_str("<div class=\"docblock\">");
+            w.write_str("<details open class=\"docblock\">");
         }
+        w.write_str("<summary class=\"hideme\"><span>Expand ddescription</span></summary>");
         w.write_str(prefix);
-        w.write_str("</div>");
+        w.write_str("</details>");
     }
 }
 
@@ -1960,7 +1960,7 @@ fn document_non_exhaustive_header(item: &clean::Item) -> &str {
 
 fn document_non_exhaustive(w: &mut Buffer, item: &clean::Item) {
     if item.is_non_exhaustive() {
-        write!(w, "<div class=\"docblock non-exhaustive non-exhaustive-{}\">", {
+        write!(w, "<details open class=\"docblock non-exhaustive non-exhaustive-{}\">", {
             if item.is_struct() {
                 "struct"
             } else if item.is_enum() {
@@ -1971,6 +1971,7 @@ fn document_non_exhaustive(w: &mut Buffer, item: &clean::Item) {
                 "type"
             }
         });
+        write!(w, "<summary class=\"hideme\"><span>Expand non-exhaustive</span></summary>");
 
         if item.is_struct() {
             w.write_str(
@@ -1998,7 +1999,7 @@ fn document_non_exhaustive(w: &mut Buffer, item: &clean::Item) {
             );
         }
 
-        w.write_str("</div>");
+        w.write_str("</details>");
     }
 }
 
@@ -2361,7 +2362,7 @@ fn short_item_info(
         if let Some(unstable_reason) = reason {
             let mut ids = cx.id_map.borrow_mut();
             message = format!(
-                "<details><summary>{}</summary>{}</details>",
+                "<details open><summary class=\"hideme\"><span>{}</span></summary>{}</details>",
                 message,
                 MarkdownHtml(
                     &unstable_reason.as_str(),
@@ -3864,8 +3865,10 @@ fn render_impl(
             if (trait_.is_none() || item.doc_value().is_some() || item.kind.is_type_alias())
                 && !is_default_item
             {
+                write!(w, "<details open><summary>");
                 (false, "")
             } else {
+                write!(w, "<details><summary>");
                 (true, " hidden")
             };
         match *item.kind {
@@ -3926,6 +3929,7 @@ fn render_impl(
             clean::StrippedItem(..) => return,
             _ => panic!("can't make docs for trait item with name {:?}", item.name),
         }
+        write!(w, "</summary>");
 
         if render_method_item {
             if !is_default_item {
@@ -3963,6 +3967,7 @@ fn render_impl(
                 document_short(w, item, cx, link, "", is_hidden, Some(parent), show_def_docs);
             }
         }
+        write!(w, "</details>");
     }
 
     w.write_str("<div class=\"impl-items\">");

@@ -2515,9 +2515,9 @@ function defocusSearchBar() {
             }
         };
 
-        onEachLazy(document.getElementsByClassName("method"), func);
-        onEachLazy(document.getElementsByClassName("associatedconstant"), func);
-        onEachLazy(document.getElementsByClassName("impl"), funcImpl);
+        // onEachLazy(document.getElementsByClassName("method"), func);
+        // onEachLazy(document.getElementsByClassName("associatedconstant"), func);
+        // onEachLazy(document.getElementsByClassName("impl"), funcImpl);
         var impl_call = function() {};
         if (hideMethodDocs === true) {
             impl_call = function(e, newToggle) {
@@ -2557,22 +2557,22 @@ function defocusSearchBar() {
                                  "</span>] Show hidden undocumented items";
             }
         }
-        onEachLazy(document.getElementsByClassName("impl-items"), function(e) {
-            onEachLazy(e.getElementsByClassName("associatedconstant"), func);
-            // We transform the DOM iterator into a vec of DOM elements to prevent performance
-            // issues on webkit browsers.
-            var hiddenElems = Array.prototype.slice.call(e.getElementsByClassName("hidden"));
-            var needToggle = hiddenElems.some(function(hiddenElem) {
-                return hasClass(hiddenElem, "content") === false &&
-                    hasClass(hiddenElem, "docblock") === false;
-            });
-            if (needToggle === true) {
-                var inner_toggle = newToggle.cloneNode(true);
-                inner_toggle.onclick = toggleClicked;
-                e.insertBefore(inner_toggle, e.firstChild);
-                impl_call(e.previousSibling, inner_toggle);
-            }
-        });
+        // onEachLazy(document.getElementsByClassName("impl-items"), function(e) {
+        //     onEachLazy(e.getElementsByClassName("associatedconstant"), func);
+        //     // We transform the DOM iterator into a vec of DOM elements to prevent performance
+        //     // issues on webkit browsers.
+        //     var hiddenElems = Array.prototype.slice.call(e.getElementsByClassName("hidden"));
+        //     var needToggle = hiddenElems.some(function(hiddenElem) {
+        //         return hasClass(hiddenElem, "content") === false &&
+        //             hasClass(hiddenElem, "docblock") === false;
+        //     });
+        //     if (needToggle === true) {
+        //         var inner_toggle = newToggle.cloneNode(true);
+        //         inner_toggle.onclick = toggleClicked;
+        //         e.insertBefore(inner_toggle, e.firstChild);
+        //         impl_call(e.previousSibling, inner_toggle);
+        //     }
+        // });
 
         var currentType = document.getElementsByClassName("type-decl")[0];
         var className = null;
@@ -2665,8 +2665,8 @@ function defocusSearchBar() {
             }
         }
 
-        onEachLazy(document.getElementsByClassName("docblock"), buildToggleWrapper); //
-        onEachLazy(document.getElementsByClassName("sub-variant"), buildToggleWrapper); //
+        // onEachLazy(document.getElementsByClassName("docblock"), buildToggleWrapper); //
+        // onEachLazy(document.getElementsByClassName("sub-variant"), buildToggleWrapper); //
 
         autoCollapse(getSettingValue("collapse") === "true");
 

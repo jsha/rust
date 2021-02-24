@@ -1765,8 +1765,13 @@ details > summary::-webkit-details-marker {
 	display: none;
 }
 
-details > summary > .show-decl {
-	padding-left: 5px;
+details > summary.hideme {
+	position: relative;
+	left: -28px;
+}
+
+details > summary > span {
+	margin-left: 9px;
 }
 
 details > summary::before {
@@ -1775,21 +1780,28 @@ details > summary::before {
 	font-size: 16px;
 	color: #999;
 	letter-spacing: 1px;
+}
+
+details > summary.hideme::before {
 	position: relative;
 }
 
-details[open] > summary {
+details[open] > summary.hideme {
 	float: left;
 }
-details[open] > summary > span {
+details[open] > summary.hideme > span {
 	display: none;
 }
 
 details[open] > summary::before {
 	content: "[−]";
 	display: inline;
+}
+
+details[open] > summary.hideme {
 	top: -8px;
 }
-details[open] > summary > span {
-	display: none;
+
+details > summary:not(.hideme)::before {
+	float: left;
 }
