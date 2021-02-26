@@ -427,8 +427,10 @@ nav.sub {
 .docblock h3, .docblock h4, .docblock h5 { font-size: 0.9em; }
 
 .docblock {
-	margin-left: 24px;
 	position: relative;
+}
+.docblock > :not(summary) {
+	margin-left: 24px;
 }
 
 .content .out-of-band {
@@ -1758,6 +1760,9 @@ div.name.expand::before {
 
 details > summary.hideme {
 	cursor: pointer;
+}
+
+summary.show-decl.hideme {
 	font-size: 20px;
 }
 
@@ -1765,19 +1770,14 @@ details > summary::-webkit-details-marker {
 	display: none;
 }
 
-details > summary.hideme {
-	position: relative;
-	left: -28px;
-}
-
-details > summary > span {
+details > summary.hideme > span {
 	margin-left: 9px;
+	color: #999;
 }
 
 details > summary::before {
 	content: "[+]";
 	font-weight: 300;
-	/* font-size: 16px; */
 	font-size: 0.8em;
 	color: #999;
 	letter-spacing: 1px;
@@ -1785,6 +1785,10 @@ details > summary::before {
 
 details > summary.hideme::before {
 	position: relative;
+}
+
+details > summary:not(.hideme)::before {
+	float: left;
 }
 
 details[open] > summary.hideme {
@@ -1801,10 +1805,4 @@ details[open] > summary::before {
 
 details[open] > summary.hideme {
 	top: -8px;
-}
-
-details > summary:not(.hideme)::before {
-	float: left;
-	position: relative;
-	left: -6px;
 }

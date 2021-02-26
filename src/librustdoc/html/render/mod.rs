@@ -1696,9 +1696,7 @@ where
     F: FnOnce(&mut Buffer),
 {
     w.write_str("<details class=\"docblock type-decl\">");
-    w.write_str(
-        "<summary class=\"toggle-label show-decl hideme\"><span>Show declaration</span></summary>",
-    );
+    w.write_str("<summary class=\"show-decl hideme\"><span>Show declaration</span></summary>");
     f(w);
     w.write_str("</details>")
 }
@@ -1844,8 +1842,8 @@ fn render_markdown(
     let mut ids = cx.id_map.borrow_mut();
     write!(
         w,
-        "<div class=\"docblock{}\">{}{}</div>",
-        if is_hidden { " hidden" } else { "" },
+        "<details {}class=\"docblock\"><summary class=\"hideme\"><span>Expand description</span></summary>{}{}</details>",
+        if is_hidden { "" } else { "open " },
         prefix,
         Markdown(
             md_text,
