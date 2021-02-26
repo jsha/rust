@@ -3773,6 +3773,7 @@ fn render_impl(
         } else {
             format!(" aliases=\"{}\"", aliases.join(","))
         };
+        write!(w, "<details open><summary class=\"h3\">");
         if let Some(use_absolute) = use_absolute {
             write!(w, "<h3 id=\"{}\" class=\"impl\"{}><code class=\"in-band\">", id, aliases);
             write!(w, "{}", i.inner_impl().print(cx.cache(), use_absolute));
@@ -3812,7 +3813,7 @@ fn render_impl(
             outer_const_version,
         );
         write_srclink(cx, &i.impl_item, w);
-        w.write_str("</h3>");
+        w.write_str("</h3></summary>");
 
         if trait_.is_some() {
             if let Some(portability) = portability(&i.impl_item, Some(parent)) {
@@ -3865,10 +3866,10 @@ fn render_impl(
             if (trait_.is_none() || item.doc_value().is_some() || item.kind.is_type_alias())
                 && !is_default_item
             {
-                write!(w, "<details open><summary>");
+                write!(w, "<details open><summary class=\"h4\">");
                 (false, "")
             } else {
-                write!(w, "<details><summary>");
+                write!(w, "<details><summary class=\"h4\">");
                 (true, " hidden")
             };
         match *item.kind {
@@ -4042,6 +4043,7 @@ fn render_impl(
         }
     }
     w.write_str("</div>");
+    w.write_str("</details>");
 }
 
 fn item_opaque_ty(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::OpaqueTy) {
