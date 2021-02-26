@@ -1756,7 +1756,7 @@ div.name.expand::before {
 	margin-left: 4em;
 }
 
-details > summary {
+details > summary.hideme {
 	cursor: pointer;
 	font-size: 20px;
 }
@@ -1777,7 +1777,8 @@ details > summary > span {
 details > summary::before {
 	content: "[+]";
 	font-weight: 300;
-	font-size: 16px;
+	/* font-size: 16px; */
+	font-size: 0.8em;
 	color: #999;
 	letter-spacing: 1px;
 }
@@ -1804,4 +1805,6 @@ details[open] > summary.hideme {
 
 details > summary:not(.hideme)::before {
 	float: left;
+	position: relative;
+	left: -6px;
 }
