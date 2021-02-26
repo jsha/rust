@@ -2420,51 +2420,8 @@ function defocusSearchBar() {
         referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
     }
 
-    function createSimpleToggle(sectionIsCollapsed) {
-        var toggle = document.createElement("a");
-        toggle.href = "javascript:void(0)";
-        toggle.className = "collapse-toggle";
-        toggle.innerHTML = "[<span class=\"inner\">" + labelForToggleButton(sectionIsCollapsed) +
-                           "</span>]";
-        return toggle;
-    }
-
-    function createToggle(toggle, otherMessage, fontSize, extraClass, show) {
-        var span = document.createElement("span");
-        span.className = "toggle-label";
-        if (show) {
-            span.style.display = "none";
-        }
-        if (!otherMessage) {
-            span.innerHTML = "&nbsp;Expand&nbsp;description";
-        } else {
-            span.innerHTML = otherMessage;
-        }
-
-        if (fontSize) {
-            span.style.fontSize = fontSize;
-        }
-
-        var mainToggle = toggle.cloneNode(true);
-        mainToggle.appendChild(span);
-
-        var wrapper = document.createElement("div");
-        wrapper.className = "toggle-wrapper";
-        if (!show) {
-            addClass(wrapper, "collapsed");
-            var inner = mainToggle.getElementsByClassName("inner");
-            if (inner && inner.length > 0) {
-                inner[0].innerHTML = "+";
-            }
-        }
-        if (extraClass) {
-            addClass(wrapper, extraClass);
-        }
-        wrapper.appendChild(mainToggle);
-        return wrapper;
-    }
-
     (function() {
+        return;
         var toggles = document.getElementById(toggleAllDocsId);
         if (toggles) {
             toggles.onclick = toggleAllDocs;
@@ -2515,65 +2472,6 @@ function defocusSearchBar() {
             }
         };
 
-        // onEachLazy(document.getElementsByClassName("method"), func);
-        // onEachLazy(document.getElementsByClassName("associatedconstant"), func);
-        // onEachLazy(document.getElementsByClassName("impl"), funcImpl);
-        var impl_call = function() {};
-        if (hideMethodDocs === true) {
-            impl_call = function(e, newToggle) {
-                if (e.id.match(/^impl(?:-\d+)?$/) === null) {
-                    // Automatically minimize all non-inherent impls
-                    if (hasClass(e, "impl") === true) {
-                        collapseDocs(newToggle, "hide");
-                    }
-                }
-            };
-        }
-        var newToggle = document.createElement("a");
-        newToggle.href = "javascript:void(0)";
-        newToggle.className = "collapse-toggle hidden-default collapsed";
-        newToggle.innerHTML = "[<span class=\"inner\">" + labelForToggleButton(true) +
-                              "</span>] Show hidden undocumented items";
-        function toggleClicked() {
-            if (hasClass(this, "collapsed")) {
-                removeClass(this, "collapsed");
-                onEachLazy(this.parentNode.getElementsByClassName("hidden"), function(x) {
-                    if (hasClass(x, "content") === false) {
-                        removeClass(x, "hidden");
-                        addClass(x, "x");
-                    }
-                }, true);
-                this.innerHTML = "[<span class=\"inner\">" + labelForToggleButton(false) +
-                                 "</span>] Hide undocumented items";
-            } else {
-                addClass(this, "collapsed");
-                onEachLazy(this.parentNode.getElementsByClassName("x"), function(x) {
-                    if (hasClass(x, "content") === false) {
-                        addClass(x, "hidden");
-                        removeClass(x, "x");
-                    }
-                }, true);
-                this.innerHTML = "[<span class=\"inner\">" + labelForToggleButton(true) +
-                                 "</span>] Show hidden undocumented items";
-            }
-        }
-        // onEachLazy(document.getElementsByClassName("impl-items"), function(e) {
-        //     onEachLazy(e.getElementsByClassName("associatedconstant"), func);
-        //     // We transform the DOM iterator into a vec of DOM elements to prevent performance
-        //     // issues on webkit browsers.
-        //     var hiddenElems = Array.prototype.slice.call(e.getElementsByClassName("hidden"));
-        //     var needToggle = hiddenElems.some(function(hiddenElem) {
-        //         return hasClass(hiddenElem, "content") === false &&
-        //             hasClass(hiddenElem, "docblock") === false;
-        //     });
-        //     if (needToggle === true) {
-        //         var inner_toggle = newToggle.cloneNode(true);
-        //         inner_toggle.onclick = toggleClicked;
-        //         e.insertBefore(inner_toggle, e.firstChild);
-        //         impl_call(e.previousSibling, inner_toggle);
-        //     }
-        // });
-
         var currentType = document.getElementsByClassName("type-decl")[0];
         var className = null;
         if (currentType) {
@@ -2599,75 +2497,6 @@ function defocusSearchBar() {
             }
         }
         showItemDeclarations = showItemDeclarations === "false";
-        function buildToggleWrapper(e) {
-            if (hasClass(e, "autohide")) {
-                var wrap = e.previousElementSibling;
-                if (wrap && hasClass(wrap, "toggle-wrapper")) {
-                    var inner_toggle = wrap.childNodes[0];
-                    var extra = e.childNodes[0].tagName === "H3";
-
-                    e.style.display = "none";
-                    addClass(wrap, "collapsed");
-                    onEachLazy(inner_toggle.getElementsByClassName("inner"), function(e) {
-                        e.innerHTML = labelForToggleButton(true);
-                    });
-                    onEachLazy(inner_toggle.getElementsByClassName("toggle-label"), function(e) {
-                        e.style.display = "inline-block";
-                        if (extra === true) {
-                            e.innerHTML = " Show " + e.childNodes[0].innerHTML;
-                        }
-                    });
-                }
-            }
-            if (e.parentNode.id === "main") {
-                var otherMessage = "";
-                var fontSize;
-                var extraClass;
-
-                if (hasClass(e, "type-decl")) {
-                    fontSize = "20px";
-                    otherMessage = "&nbsp;Show&nbsp;declaration";
-                    if (showItemDeclarations === false) {
-                        extraClass = "collapsed";
-                    }
-                } else if (hasClass(e, "sub-variant")) {
-                    otherMessage = "&nbsp;Show&nbsp;fields";
-                } else if (hasClass(e, "non-exhaustive")) {
-                    otherMessage = "&nbsp;This&nbsp;";
-                    if (hasClass(e, "non-exhaustive-struct")) {
-                        otherMessage += "struct";
-                    } else if (hasClass(e, "non-exhaustive-enum")) {
-                        otherMessage += "enum";
-                    } else if (hasClass(e, "non-exhaustive-variant")) {
-                        otherMessage += "enum variant";
-                    } else if (hasClass(e, "non-exhaustive-type")) {
-                        otherMessage += "type";
-                    }
-                    otherMessage += "&nbsp;is&nbsp;marked&nbsp;as&nbsp;non-exhaustive";
-                } else if (hasClass(e.childNodes[0], "impl-items")) {
-                    extraClass = "marg-left";
-                }
-
-                e.parentNode.insertBefore(
-                    createToggle(
-                        toggle,
-                        otherMessage,
-                        fontSize,
-                        extraClass,
-                        hasClass(e, "type-decl") === false || showItemDeclarations === true),
-                    e);
-                if (hasClass(e, "type-decl") === true && showItemDeclarations === true) {
-                    collapseDocs(e.previousSibling.childNodes[0], "toggle");
-                }
-                if (hasClass(e, "non-exhaustive") === true) {
-                    collapseDocs(e.previousSibling.childNodes[0], "toggle");
-                }
-            }
-        }
-
-        // onEachLazy(document.getElementsByClassName("docblock"), buildToggleWrapper); //
-        // onEachLazy(document.getElementsByClassName("sub-variant"), buildToggleWrapper); //
-
         autoCollapse(getSettingValue("collapse") === "true");
 
         var pageId = getPageId();
@@ -2675,38 +2504,6 @@ function defocusSearchBar() {
             expandSection(pageId);
         }
     }());
-
-    // function createToggleWrapper(tog) {
-    //     var span = document.createElement("span");
-    //     span.className = "toggle-label";
-    //     span.style.display = "none";
-    //     span.innerHTML = "&nbsp;Expand&nbsp;attributes";
-    //     tog.appendChild(span);
-
-    //     var wrapper = document.createElement("div");
-    //     wrapper.className = "toggle-wrapper toggle-attributes";
-    //     wrapper.appendChild(tog);
-    //     return wrapper;
-    // }
-
-    // (function() {
-    //     // To avoid checking on "rustdoc-item-attributes" value on every loop...
-    //     var itemAttributesFunc = function() {};
-    //     if (getSettingValue("auto-hide-attributes") !== "false") {
-    //         itemAttributesFunc = function(x) {
-    //             collapseDocs(x.previousSibling.childNodes[0], "toggle");
-    //         };
-    //     }
-    //     var attributesToggle = createToggleWrapper(createSimpleToggle(false));
-    //     onEachLazy(main.getElementsByClassName("attributes"), function(i_e) {
-    //         var attr_tog = attributesToggle.cloneNode(true);
-    //         if (hasClass(i_e, "top-attr") === true) {
-    //             addClass(attr_tog, "top-attr");
-    //         }
-    //         i_e.parentNode.insertBefore(attr_tog, i_e);
-    //         itemAttributesFunc(i_e);
-    //     });
-    // }());
 
     (function() {
         // To avoid checking on "rustdoc-line-numbers" value on every loop...
