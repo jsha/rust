@@ -77,6 +77,7 @@ impl Limit {
 
     /// Check that `value` is within the limit. Ensures that the same comparisons are used
     /// throughout the compiler, as mismatches can cause ICEs, see #72540.
+    #[inline]
     pub fn value_within_limit(&self, value: usize) -> bool {
         value <= self.0
     }
@@ -347,10 +348,12 @@ impl Session {
         self.crate_types.set(crate_types).expect("`crate_types` was initialized twice")
     }
 
+    #[inline]
     pub fn recursion_limit(&self) -> Limit {
         self.recursion_limit.get().copied().unwrap()
     }
 
+    #[inline]
     pub fn type_length_limit(&self) -> Limit {
         self.type_length_limit.get().copied().unwrap()
     }
@@ -636,6 +639,12 @@ impl Session {
     }
     pub fn binary_dep_depinfo(&self) -> bool {
         self.opts.debugging_opts.binary_dep_depinfo
+    }
+    pub fn mir_opt_level(&self) -> usize {
+        self.opts
+            .debugging_opts
+            .mir_opt_level
+            .unwrap_or_else(|| if self.opts.optimize != config::OptLevel::No { 2 } else { 1 })
     }
 
     /// Gets the features enabled for the current compilation session.

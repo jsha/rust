@@ -8,10 +8,10 @@ use super::{AttrWrapper, BlockMode, ForceCollect, Parser, Restrictions, SemiColo
 use crate::maybe_whole;
 
 use rustc_ast as ast;
-use rustc_ast::attr::HasAttrs;
 use rustc_ast::ptr::P;
 use rustc_ast::token::{self, TokenKind};
 use rustc_ast::util::classify;
+use rustc_ast::AstLike;
 use rustc_ast::{AttrStyle, AttrVec, Attribute, MacCall, MacCallStmt, MacStmtStyle};
 use rustc_ast::{Block, BlockCheckMode, Expr, ExprKind, Local, Stmt, StmtKind, DUMMY_NODE_ID};
 use rustc_errors::{Applicability, PResult};
@@ -34,7 +34,7 @@ impl<'a> Parser<'a> {
 
     /// If `force_capture` is true, forces collection of tokens regardless of whether
     /// or not we have attributes
-    fn parse_stmt_without_recovery(
+    crate fn parse_stmt_without_recovery(
         &mut self,
         capture_semi: bool,
         force_collect: ForceCollect,

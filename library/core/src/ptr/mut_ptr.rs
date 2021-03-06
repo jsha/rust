@@ -1003,8 +1003,9 @@ impl<T: ?Sized> *mut T {
     ///
     /// [`ptr::write`]: crate::ptr::write()
     #[stable(feature = "pointer_methods", since = "1.26.0")]
+    #[rustc_const_unstable(feature = "const_ptr_write", issue = "none")]
     #[inline]
-    pub unsafe fn write(self, val: T)
+    pub const unsafe fn write(self, val: T)
     where
         T: Sized,
     {
@@ -1057,8 +1058,9 @@ impl<T: ?Sized> *mut T {
     ///
     /// [`ptr::write_unaligned`]: crate::ptr::write_unaligned()
     #[stable(feature = "pointer_methods", since = "1.26.0")]
+    #[rustc_const_unstable(feature = "const_ptr_write", issue = "none")]
     #[inline]
-    pub unsafe fn write_unaligned(self, val: T)
+    pub const unsafe fn write_unaligned(self, val: T)
     where
         T: Sized,
     {
@@ -1271,8 +1273,6 @@ impl<T> *mut [T] {
     /// See also [`slice::from_raw_parts`][].
     ///
     /// [valid]: crate::ptr#safety
-    /// [`NonNull::dangling()`]: NonNull::dangling
-    /// [`pointer::offset`]: ../std/primitive.pointer.html#method.offset
     #[inline]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
     pub unsafe fn as_uninit_slice<'a>(self) -> Option<&'a [MaybeUninit<T>]> {
@@ -1323,8 +1323,6 @@ impl<T> *mut [T] {
     /// See also [`slice::from_raw_parts_mut`][].
     ///
     /// [valid]: crate::ptr#safety
-    /// [`NonNull::dangling()`]: NonNull::dangling
-    /// [`pointer::offset`]: ../std/primitive.pointer.html#method.offset
     #[inline]
     #[unstable(feature = "ptr_as_uninit", issue = "75402")]
     pub unsafe fn as_uninit_slice_mut<'a>(self) -> Option<&'a mut [MaybeUninit<T>]> {

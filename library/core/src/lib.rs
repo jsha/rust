@@ -73,10 +73,12 @@
 #![feature(const_discriminant)]
 #![feature(const_cell_into_inner)]
 #![feature(const_intrinsic_copy)]
+#![feature(const_intrinsic_forget)]
 #![feature(const_float_classify)]
 #![feature(const_float_bits_conv)]
 #![feature(const_int_unchecked_arith)]
 #![feature(const_mut_refs)]
+#![feature(const_refs_to_cell)]
 #![feature(const_cttz)]
 #![feature(const_panic)]
 #![feature(const_pin)]
@@ -90,6 +92,7 @@
 #![feature(const_ptr_offset)]
 #![feature(const_ptr_offset_from)]
 #![feature(const_ptr_read)]
+#![feature(const_ptr_write)]
 #![feature(const_raw_ptr_comparison)]
 #![feature(const_raw_ptr_deref)]
 #![feature(const_slice_from_raw_parts)]
@@ -111,7 +114,7 @@
 #![feature(extended_key_value_attributes)]
 #![feature(extern_types)]
 #![feature(fundamental)]
-#![cfg_attr(not(bootstrap), feature(intra_doc_pointers))]
+#![feature(intra_doc_pointers)]
 #![feature(intrinsics)]
 #![feature(lang_items)]
 #![feature(link_llvm_intrinsics)]
@@ -128,7 +131,6 @@
 #![feature(repr_simd, platform_intrinsics)]
 #![feature(rustc_attrs)]
 #![feature(simd_ffi)]
-#![cfg_attr(bootstrap, feature(min_const_generics))]
 #![feature(min_specialization)]
 #![feature(staged_api)]
 #![feature(std_internals)]
@@ -295,7 +297,8 @@ pub mod primitive;
     unused_imports,
     unsafe_op_in_unsafe_fn
 )]
-#[allow(non_autolinks)]
+#[cfg_attr(bootstrap, allow(non_autolinks))]
+#[cfg_attr(not(bootstrap), allow(rustdoc::non_autolinks))]
 // FIXME: This annotation should be moved into rust-lang/stdarch after clashing_extern_declarations is
 // merged. It currently cannot because bootstrap fails as the lint hasn't been defined yet.
 #[allow(clashing_extern_declarations)]

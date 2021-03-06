@@ -50,16 +50,22 @@ thread_local!(crate static MAX_DEF_IDX: RefCell<FxHashMap<CrateNum, DefIndex>> =
 #[derive(Clone, Debug)]
 crate struct Crate {
     crate name: Symbol,
-    crate version: Option<String>,
     crate src: FileName,
     crate module: Option<Item>,
     crate externs: Vec<(CrateNum, ExternalCrate)>,
     crate primitives: Vec<(DefId, PrimitiveType)>,
     // These are later on moved into `CACHEKEY`, leaving the map empty.
     // Only here so that they can be filtered through the rustdoc passes.
-    crate external_traits: Rc<RefCell<FxHashMap<DefId, Trait>>>,
+    crate external_traits: Rc<RefCell<FxHashMap<DefId, TraitWithExtraInfo>>>,
     crate masked_crates: FxHashSet<CrateNum>,
     crate collapsed: bool,
+}
+
+/// This struct is used to wrap additional information added by rustdoc on a `trait` item.
+#[derive(Clone, Debug)]
+crate struct TraitWithExtraInfo {
+    crate trait_: Trait,
+    crate is_spotlight: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -141,6 +147,22 @@ impl Item {
         kind: ItemKind,
         cx: &mut DocContext<'_>,
     ) -> Item {
+        Self::from_def_id_and_attrs_and_parts(
+            def_id,
+            name,
+            kind,
+            box cx.tcx.get_attrs(def_id).clean(cx),
+            cx,
+        )
+    }
+
+    pub fn from_def_id_and_attrs_and_parts(
+        def_id: DefId,
+        name: Option<Symbol>,
+        kind: ItemKind,
+        attrs: Box<Attributes>,
+        cx: &mut DocContext<'_>,
+    ) -> Item {
         debug!("name={:?}, def_id={:?}", name, def_id);
 
         // `span_if_local()` lies about functions and only gives the span of the function signature
@@ -157,7 +179,7 @@ impl Item {
             kind: box kind,
             name,
             source: source.clean(cx),
-            attrs: box cx.tcx.get_attrs(def_id).clean(cx),
+            attrs,
             visibility: cx.tcx.visibility(def_id).clean(cx),
         }
     }
@@ -169,7 +191,7 @@ impl Item {
     }
 
     crate fn links(&self, cache: &Cache) -> Vec<RenderedLink> {
-        self.attrs.links(&self.def_id.krate, cache)
+        self.attrs.links(self.def_id.krate, cache)
     }
 
     crate fn is_crate(&self) -> bool {
@@ -301,7 +323,10 @@ impl Item {
 
 #[derive(Clone, Debug)]
 crate enum ItemKind {
-    ExternCrateItem(Symbol, Option<Symbol>),
+    ExternCrateItem {
+        /// The crate's name, *not* the name it's imported as.
+        src: Option<Symbol>,
+    },
     ImportItem(Import),
     StructItem(Struct),
     UnionItem(Union),
@@ -354,7 +379,7 @@ impl ItemKind {
             TraitItem(t) => t.items.iter(),
             ImplItem(i) => i.items.iter(),
             ModuleItem(m) => m.items.iter(),
-            ExternCrateItem(_, _)
+            ExternCrateItem { .. }
             | ImportItem(_)
             | FunctionItem(_)
             | TypedefItem(_, _)
@@ -822,7 +847,7 @@ impl Attributes {
     /// Gets links as a vector
     ///
     /// Cache must be populated before call
-    crate fn links(&self, krate: &CrateNum, cache: &Cache) -> Vec<RenderedLink> {
+    crate fn links(&self, krate: CrateNum, cache: &Cache) -> Vec<RenderedLink> {
         use crate::html::format::href;
         use crate::html::render::CURRENT_DEPTH;
 
@@ -847,7 +872,7 @@ impl Attributes {
                     }
                     None => {
                         if let Some(ref fragment) = *fragment {
-                            let url = match cache.extern_locations.get(krate) {
+                            let url = match cache.extern_locations.get(&krate) {
                                 Some(&(_, _, ExternalLocation::Local)) => {
                                     let depth = CURRENT_DEPTH.with(|l| l.get());
                                     "../".repeat(depth)
@@ -1185,7 +1210,6 @@ crate struct Trait {
     crate items: Vec<Item>,
     crate generics: Generics,
     crate bounds: Vec<GenericBound>,
-    crate is_spotlight: bool,
     crate is_auto: bool,
 }
 
@@ -1850,6 +1874,10 @@ impl Span {
 
     crate fn span(&self) -> rustc_span::Span {
         self.0
+    }
+
+    crate fn is_dummy(&self) -> bool {
+        self.0.is_dummy()
     }
 
     crate fn filename(&self, sess: &Session) -> FileName {

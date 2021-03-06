@@ -29,6 +29,16 @@ fn def_id_to_path(tcx: TyCtxt<'_>, did: DefId) -> Vec<String> {
     std::iter::once(crate_name).chain(relative).collect()
 }
 
+crate fn inherits_doc_hidden(tcx: TyCtxt<'_>, mut node: hir::HirId) -> bool {
+    while let Some(id) = tcx.hir().get_enclosing_scope(node) {
+        node = id;
+        if tcx.hir().attrs(node).lists(sym::doc).has_word(sym::hidden) {
+            return true;
+        }
+    }
+    false
+}
+
 // Also, is there some reason that this doesn't use the 'visit'
 // framework from syntax?.
 
@@ -113,7 +123,7 @@ impl<'a, 'tcx> RustdocVisitor<'a, 'tcx> {
             assert_eq!(cur_mod_def_id, macro_parent_def_id);
             cur_mod.macros.push((def, None));
         }
-        self.cx.renderinfo.get_mut().exact_paths = self.exact_paths;
+        self.cx.cache.exact_paths = self.exact_paths;
         top_level_module
     }
 
@@ -158,19 +168,6 @@ impl<'a, 'tcx> RustdocVisitor<'a, 'tcx> {
         om: &mut Module<'tcx>,
         please_inline: bool,
     ) -> bool {
-        fn inherits_doc_hidden(cx: &core::DocContext<'_>, mut node: hir::HirId) -> bool {
-            while let Some(id) = cx.tcx.hir().get_enclosing_scope(node) {
-                node = id;
-                if cx.tcx.hir().attrs(node).lists(sym::doc).has_word(sym::hidden) {
-                    return true;
-                }
-                if node == hir::CRATE_HIR_ID {
-                    break;
-                }
-            }
-            false
-        }
-
         debug!("maybe_inline_local res: {:?}", res);
 
         let tcx = self.cx.tcx;
@@ -199,12 +196,7 @@ impl<'a, 'tcx> RustdocVisitor<'a, 'tcx> {
                     } else {
                         // All items need to be handled here in case someone wishes to link
                         // to them with intra-doc links
-                        self.cx
-                            .renderinfo
-                            .get_mut()
-                            .access_levels
-                            .map
-                            .insert(did, AccessLevel::Public);
+                        self.cx.cache.access_levels.map.insert(did, AccessLevel::Public);
                     }
                 }
             }
@@ -216,8 +208,8 @@ impl<'a, 'tcx> RustdocVisitor<'a, 'tcx> {
             None => return false,
         };
 
-        let is_private = !self.cx.renderinfo.borrow().access_levels.is_public(res_did);
-        let is_hidden = inherits_doc_hidden(self.cx, res_hir_id);
+        let is_private = !self.cx.cache.access_levels.is_public(res_did);
+        let is_hidden = inherits_doc_hidden(self.cx.tcx, res_hir_id);
 
         // Only inline if requested or if the item would otherwise be stripped.
         if (!please_inline && !is_private && !is_hidden) || is_no_inline {

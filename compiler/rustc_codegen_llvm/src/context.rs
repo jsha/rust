@@ -7,10 +7,10 @@ use crate::llvm_util;
 use crate::type_::Type;
 use crate::value::Value;
 
+use cstr::cstr;
 use rustc_codegen_ssa::base::wants_msvc_seh;
 use rustc_codegen_ssa::traits::*;
 use rustc_data_structures::base_n;
-use rustc_data_structures::const_cstr;
 use rustc_data_structures::fx::FxHashMap;
 use rustc_data_structures::small_c_str::SmallCStr;
 use rustc_middle::bug;
@@ -104,6 +104,10 @@ fn strip_x86_address_spaces(data_layout: String) -> String {
     data_layout.replace("-p270:32:32-p271:32:32-p272:64:64-", "-")
 }
 
+fn strip_powerpc64_vectors(data_layout: String) -> String {
+    data_layout.replace("-v256:256:256-v512:512:512", "")
+}
+
 pub unsafe fn create_module(
     tcx: TyCtxt<'_>,
     llcx: &'ll llvm::Context,
@@ -118,6 +122,9 @@ pub unsafe fn create_module(
         && (sess.target.arch == "x86" || sess.target.arch == "x86_64")
     {
         target_data_layout = strip_x86_address_spaces(target_data_layout);
+    }
+    if llvm_util::get_version() < (12, 0, 0) && sess.target.arch == "powerpc64" {
+        target_data_layout = strip_powerpc64_vectors(target_data_layout);
     }
 
     // Ensure the data-layout values hardcoded remain the defaults.
@@ -414,8 +421,8 @@ impl MiscMethods<'tcx> for CodegenCx<'ll, 'tcx> {
     }
 
     fn create_used_variable(&self) {
-        let name = const_cstr!("llvm.used");
-        let section = const_cstr!("llvm.metadata");
+        let name = cstr!("llvm.used");
+        let section = cstr!("llvm.metadata");
         let array =
             self.const_array(&self.type_ptr_to(self.type_i8()), &*self.used_statics.borrow());
 

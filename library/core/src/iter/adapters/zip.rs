@@ -197,9 +197,10 @@ where
             unsafe {
                 Some((self.a.__iterator_get_unchecked(i), self.b.__iterator_get_unchecked(i)))
             }
-        } else if A::may_have_side_effect() && self.index < self.a.size() {
+        } else if A::MAY_HAVE_SIDE_EFFECT && self.index < self.a.size() {
             let i = self.index;
             self.index += 1;
+            self.len += 1;
             // match the base implementation's potential side effects
             // SAFETY: we just checked that `i` < `self.a.len()`
             unsafe {
@@ -224,7 +225,7 @@ where
         while self.index < end {
             let i = self.index;
             self.index += 1;
-            if A::may_have_side_effect() {
+            if A::MAY_HAVE_SIDE_EFFECT {
                 // SAFETY: the usage of `cmp::min` to calculate `delta`
                 // ensures that `end` is smaller than or equal to `self.len`,
                 // so `i` is also smaller than `self.len`.
@@ -232,7 +233,7 @@ where
                     self.a.__iterator_get_unchecked(i);
                 }
             }
-            if B::may_have_side_effect() {
+            if B::MAY_HAVE_SIDE_EFFECT {
                 // SAFETY: same as above.
                 unsafe {
                     self.b.__iterator_get_unchecked(i);
@@ -249,9 +250,7 @@ where
         A: DoubleEndedIterator + ExactSizeIterator,
         B: DoubleEndedIterator + ExactSizeIterator,
     {
-        let a_side_effect = A::may_have_side_effect();
-        let b_side_effect = B::may_have_side_effect();
-        if a_side_effect || b_side_effect {
+        if A::MAY_HAVE_SIDE_EFFECT || B::MAY_HAVE_SIDE_EFFECT {
             let sz_a = self.a.size();
             let sz_b = self.b.size();
             // Adjust a, b to equal length, make sure that only the first call
@@ -259,13 +258,13 @@ where
             // on calls to `self.next_back()` after calling `get_unchecked()`.
             if sz_a != sz_b {
                 let sz_a = self.a.size();
-                if a_side_effect && sz_a > self.len {
-                    for _ in 0..sz_a - cmp::max(self.len, self.index) {
+                if A::MAY_HAVE_SIDE_EFFECT && sz_a > self.len {
+                    for _ in 0..sz_a - self.len {
                         self.a.next_back();
                     }
                 }
                 let sz_b = self.b.size();
-                if b_side_effect && sz_b > self.len {
+                if B::MAY_HAVE_SIDE_EFFECT && sz_b > self.len {
                     for _ in 0..sz_b - self.len {
                         self.b.next_back();
                     }
@@ -309,9 +308,7 @@ where
     A: TrustedRandomAccess,
     B: TrustedRandomAccess,
 {
-    fn may_have_side_effect() -> bool {
-        A::may_have_side_effect() || B::may_have_side_effect()
-    }
+    const MAY_HAVE_SIDE_EFFECT: bool = A::MAY_HAVE_SIDE_EFFECT || B::MAY_HAVE_SIDE_EFFECT;
 }
 
 #[stable(feature = "fused", since = "1.26.0")]
@@ -422,9 +419,9 @@ pub unsafe trait TrustedRandomAccess: Sized {
     {
         self.size_hint().0
     }
-    /// Returns `true` if getting an iterator element may have
-    /// side effects. Remember to take inner iterators into account.
-    fn may_have_side_effect() -> bool;
+    /// `true` if getting an iterator element may have side effects.
+    /// Remember to take inner iterators into account.
+    const MAY_HAVE_SIDE_EFFECT: bool;
 }
 
 /// Like `Iterator::__iterator_get_unchecked`, but doesn't require the compiler to

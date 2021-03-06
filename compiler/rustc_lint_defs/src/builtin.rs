@@ -1080,6 +1080,7 @@ declare_lint! {
     pub UNALIGNED_REFERENCES,
     Allow,
     "detects unaligned references to fields of packed structs",
+    report_in_external_macro
 }
 
 declare_lint! {
@@ -1872,93 +1873,6 @@ declare_lint! {
     pub UNUSED_LABELS,
     Warn,
     "detects labels that are never used"
-}
-
-declare_lint! {
-    /// The `broken_intra_doc_links` lint detects failures in resolving
-    /// intra-doc link targets. This is a `rustdoc` only lint, see the
-    /// documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#broken_intra_doc_links
-    pub BROKEN_INTRA_DOC_LINKS,
-    Warn,
-    "failures in resolving intra-doc link targets"
-}
-
-declare_lint! {
-    /// This is a subset of `broken_intra_doc_links` that warns when linking from
-    /// a public item to a private one. This is a `rustdoc` only lint, see the
-    /// documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#private_intra_doc_links
-    pub PRIVATE_INTRA_DOC_LINKS,
-    Warn,
-    "linking from a public item to a private one"
-}
-
-declare_lint! {
-    /// The `invalid_codeblock_attributes` lint detects code block attributes
-    /// in documentation examples that have potentially mis-typed values. This
-    /// is a `rustdoc` only lint, see the documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#invalid_codeblock_attributes
-    pub INVALID_CODEBLOCK_ATTRIBUTES,
-    Warn,
-    "codeblock attribute looks a lot like a known one"
-}
-
-declare_lint! {
-    /// The `missing_crate_level_docs` lint detects if documentation is
-    /// missing at the crate root. This is a `rustdoc` only lint, see the
-    /// documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#missing_crate_level_docs
-    pub MISSING_CRATE_LEVEL_DOCS,
-    Allow,
-    "detects crates with no crate-level documentation"
-}
-
-declare_lint! {
-    /// The `missing_doc_code_examples` lint detects publicly-exported items
-    /// without code samples in their documentation. This is a `rustdoc` only
-    /// lint, see the documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#missing_doc_code_examples
-    pub MISSING_DOC_CODE_EXAMPLES,
-    Allow,
-    "detects publicly-exported items without code samples in their documentation"
-}
-
-declare_lint! {
-    /// The `private_doc_tests` lint detects code samples in docs of private
-    /// items not documented by `rustdoc`. This is a `rustdoc` only lint, see
-    /// the documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#private_doc_tests
-    pub PRIVATE_DOC_TESTS,
-    Allow,
-    "detects code samples in docs of private items not documented by rustdoc"
-}
-
-declare_lint! {
-    /// The `invalid_html_tags` lint detects invalid HTML tags. This is a
-    /// `rustdoc` only lint, see the documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#invalid_html_tags
-    pub INVALID_HTML_TAGS,
-    Allow,
-    "detects invalid HTML tags in doc comments"
-}
-
-declare_lint! {
-    /// The `non_autolinks` lint detects when a URL could be written using
-    /// only angle brackets. This is a `rustdoc` only lint, see the
-    /// documentation in the [rustdoc book].
-    ///
-    /// [rustdoc book]: ../../../rustdoc/lints.html#non_autolinks
-    pub NON_AUTOLINKS,
-    Warn,
-    "detects URLs that could be written using only angle brackets"
 }
 
 declare_lint! {
@@ -3019,14 +2933,6 @@ declare_lint_pass! {
         ABSOLUTE_PATHS_NOT_STARTING_WITH_CRATE,
         UNSTABLE_NAME_COLLISIONS,
         IRREFUTABLE_LET_PATTERNS,
-        BROKEN_INTRA_DOC_LINKS,
-        PRIVATE_INTRA_DOC_LINKS,
-        INVALID_CODEBLOCK_ATTRIBUTES,
-        MISSING_CRATE_LEVEL_DOCS,
-        MISSING_DOC_CODE_EXAMPLES,
-        INVALID_HTML_TAGS,
-        PRIVATE_DOC_TESTS,
-        NON_AUTOLINKS,
         WHERE_CLAUSES_OBJECT_SAFETY,
         PROC_MACRO_DERIVE_RESOLUTION_FALLBACK,
         MACRO_USE_EXTERN_CRATE,
@@ -3152,4 +3058,34 @@ declare_lint! {
     pub MISSING_ABI,
     Allow,
     "No declared ABI for extern declaration"
+}
+
+declare_lint! {
+    /// The `invalid_doc_attributes` lint detects when the `#[doc(...)]` is
+    /// misused.
+    ///
+    /// ### Example
+    ///
+    /// ```rust,compile_fail
+    /// #![deny(warnings)]
+    ///
+    /// pub mod submodule {
+    ///     #![doc(test(no_crate_inject))]
+    /// }
+    /// ```
+    ///
+    /// {{produces}}
+    ///
+    /// ### Explanation
+    ///
+    /// Previously, there were very like checks being performed on `#[doc(..)]`
+    /// unlike the other attributes. It'll now catch all the issues that it
+    /// silently ignored previously.
+    pub INVALID_DOC_ATTRIBUTES,
+    Warn,
+    "detects invalid `#[doc(...)]` attributes",
+    @future_incompatible = FutureIncompatibleInfo {
+        reference: "issue #82730 <https://github.com/rust-lang/rust/issues/82730>",
+        edition: None,
+    };
 }

@@ -4,9 +4,7 @@ use std::ffi::OsStr;
 use std::fmt;
 use std::path::PathBuf;
 
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
-use rustc_hir::def_id::DefId;
-use rustc_middle::middle::privacy::AccessLevels;
+use rustc_data_structures::fx::FxHashMap;
 use rustc_session::config::{self, parse_crate_types_from_list, parse_externs, CrateType};
 use rustc_session::config::{
     build_codegen_options, build_debugging_options, get_cmd_lint_options, host_triple,
@@ -265,21 +263,9 @@ crate struct RenderOptions {
     crate document_private: bool,
     /// Document items that have `doc(hidden)`.
     crate document_hidden: bool,
+    /// If `true`, generate a JSON file in the crate folder instead of HTML redirection files.
+    crate generate_redirect_map: bool,
     crate unstable_features: rustc_feature::UnstableFeatures,
-}
-
-/// Temporary storage for data obtained during `RustdocVisitor::clean()`.
-/// Later on moved into `cache`.
-#[derive(Default, Clone)]
-crate struct RenderInfo {
-    crate inlined: FxHashSet<DefId>,
-    crate external_paths: crate::core::ExternalPaths,
-    crate exact_paths: FxHashMap<DefId, Vec<String>>,
-    crate access_levels: AccessLevels<DefId>,
-    crate deref_trait_did: Option<DefId>,
-    crate deref_mut_trait_did: Option<DefId>,
-    crate owned_box_did: Option<DefId>,
-    crate output_format: OutputFormat,
 }
 
 impl Options {
@@ -586,6 +572,7 @@ impl Options {
         let document_private = matches.opt_present("document-private-items");
         let document_hidden = matches.opt_present("document-hidden-items");
         let run_check = matches.opt_present("check");
+        let generate_redirect_map = matches.opt_present("generate-redirect-map");
 
         let (lint_opts, describe_lints, lint_cap) = get_cmd_lint_options(matches, error_format);
 
@@ -643,6 +630,7 @@ impl Options {
                 generate_search_filter,
                 document_private,
                 document_hidden,
+                generate_redirect_map,
                 unstable_features: rustc_feature::UnstableFeatures::from_environment(
                     crate_name.as_deref(),
                 ),

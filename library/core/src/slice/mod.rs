@@ -8,7 +8,7 @@
 
 #![stable(feature = "rust1", since = "1.0.0")]
 
-use crate::cmp::Ordering::{self, Equal, Greater, Less};
+use crate::cmp::Ordering::{self, Greater, Less};
 use crate::marker::Copy;
 use crate::mem;
 use crate::num::NonZeroUsize;
@@ -18,6 +18,7 @@ use crate::option::Option::{None, Some};
 use crate::ptr;
 use crate::result::Result;
 use crate::result::Result::{Err, Ok};
+use crate::slice;
 
 #[unstable(
     feature = "slice_internals",
@@ -29,11 +30,12 @@ pub mod memchr;
 
 mod ascii;
 mod cmp;
-pub(crate) mod index;
+mod index;
 mod iter;
 mod raw;
 mod rotate;
 mod sort;
+mod specialize;
 
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use iter::{Chunks, ChunksMut, Windows};
@@ -75,6 +77,9 @@ pub use sort::heapsort;
 
 #[stable(feature = "slice_get_slice", since = "1.28.0")]
 pub use index::SliceIndex;
+
+#[unstable(feature = "slice_range", issue = "76393")]
+pub use index::range;
 
 #[lang = "slice"]
 #[cfg(not(test))]
@@ -2180,25 +2185,31 @@ impl<T> [T] {
     where
         F: FnMut(&'a T) -> Ordering,
     {
-        let s = self;
-        let mut size = s.len();
-        if size == 0 {
-            return Err(0);
+        let mut size = self.len();
+        let mut left = 0;
+        let mut right = size;
+        while left < right {
+            let mid = left + size / 2;
+
+            // SAFETY: the call is made safe by the following invariants:
+            // - `mid >= 0`
+            // - `mid < size`: `mid` is limited by `[left; right)` bound.
+            let cmp = f(unsafe { self.get_unchecked(mid) });
+
+            // The reason why we use if/else control flow rather than match
+            // is because match reorders comparison operations, which is perf sensitive.
+            // This is x86 asm for u8: https://rust.godbolt.org/z/8Y8Pra.
+            if cmp == Less {
+                left = mid + 1;
+            } else if cmp == Greater {
+                right = mid;
+            } else {
+                return Ok(mid);
+            }
+
+            size = right - left;
         }
-        let mut base = 0usize;
-        while size > 1 {
-            let half = size / 2;
-            let mid = base + half;
-            // SAFETY: the call is made safe by the following inconstants:
-            // - `mid >= 0`: by definition
-            // - `mid < size`: `mid = size / 2 + size / 4 + size / 8 ...`
-            let cmp = f(unsafe { s.get_unchecked(mid) });
-            base = if cmp == Greater { base } else { mid };
-            size -= half;
-        }
-        // SAFETY: base is always in [0, size) because base <= mid.
-        let cmp = f(unsafe { s.get_unchecked(base) });
-        if cmp == Equal { Ok(base) } else { Err(base + (cmp == Less) as usize) }
+        Err(left)
     }
 
     /// Binary searches this sorted slice with a key extraction function.
@@ -2862,13 +2873,7 @@ impl<T> [T] {
     where
         T: Clone,
     {
-        if let Some((last, elems)) = self.split_last_mut() {
-            for el in elems {
-                el.clone_from(&value);
-            }
-
-            *last = value
-        }
+        specialize::SpecFill::spec_fill(self, value);
     }
 
     /// Fills `self` with elements returned by calling a closure repeatedly.
@@ -3075,7 +3080,7 @@ impl<T> [T] {
     where
         T: Copy,
     {
-        let Range { start: src_start, end: src_end } = src.assert_len(self.len());
+        let Range { start: src_start, end: src_end } = slice::range(src, ..self.len());
         let count = src_end - src_start;
         assert!(dest <= self.len() - count, "dest is out of bounds");
         // SAFETY: the conditions for `ptr::copy` have all been checked above,

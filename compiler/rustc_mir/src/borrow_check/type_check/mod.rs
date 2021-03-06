@@ -1651,7 +1651,7 @@ impl<'a, 'tcx> TypeChecker<'a, 'tcx> {
             }
             TerminatorKind::Yield { ref value, .. } => {
                 let value_ty = value.ty(body, tcx);
-                match body.yield_ty {
+                match body.yield_ty() {
                     None => span_mirbug!(self, term, "yield in non-generator"),
                     Some(ty) => {
                         if let Err(terr) = self.sub_types(
@@ -1734,7 +1734,10 @@ impl<'a, 'tcx> TypeChecker<'a, 'tcx> {
                 }
             }
             None => {
-                if !sig.output().conservative_is_privately_uninhabited(self.tcx()) {
+                if !self
+                    .tcx()
+                    .conservative_is_privately_uninhabited(self.param_env.and(sig.output()))
+                {
                     span_mirbug!(self, term, "call to converging function {:?} w/o dest", sig);
                 }
             }

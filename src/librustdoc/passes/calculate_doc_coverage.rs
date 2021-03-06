@@ -127,7 +127,7 @@ impl<'a, 'b> CoverageCalculator<'a, 'b> {
     }
 
     fn print_results(&self) {
-        let output_format = self.ctx.renderinfo.borrow().output_format;
+        let output_format = self.ctx.output_format;
         if output_format.is_json() {
             println!("{}", self.to_json());
             return;
@@ -193,7 +193,7 @@ impl<'a, 'b> fold::DocFolder for CoverageCalculator<'a, 'b> {
                 // don't count items in stripped modules
                 return Some(i);
             }
-            clean::ImportItem(..) | clean::ExternCrateItem(..) => {
+            clean::ImportItem(..) | clean::ExternCrateItem { .. } => {
                 // docs on `use` and `extern crate` statements are not displayed, so they're not
                 // worth counting
                 return Some(i);

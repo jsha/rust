@@ -133,8 +133,7 @@ target | std | host | notes
 `x86_64-fortanix-unknown-sgx` | ✓ |  | [Fortanix ABI] for 64-bit Intel SGX
 `x86_64-fuchsia` | ✓ |  | 64-bit Fuchsia
 `x86_64-linux-android` | ✓ |  | 64-bit x86 Android
-`x86_64-rumprun-netbsd` | ✓ |  | 64-bit NetBSD Rump Kernel
-`x86_64-sun-solaris` | ✓ |  | 64-bit Solaris 10/11, illumos
+`x86_64-pc-solaris` | ✓ |  | 64-bit Solaris 10/11, illumos
 `x86_64-unknown-freebsd` | ✓ | ✓ | 64-bit FreeBSD
 `x86_64-unknown-illumos` | ✓ | ✓ | illumos
 `x86_64-unknown-linux-gnux32` | ✓ |  | 64-bit Linux (x32 ABI) (kernel 4.15, glibc 2.27)
@@ -153,6 +152,7 @@ not available.
 target | std | host | notes
 -------|-----|------|-------
 `aarch64-apple-ios-macabi` | ? |  | Apple Catalyst on ARM64
+`aarch64-apple-ios-sim` | ? |  | Apple iOS Simulator on ARM64
 `aarch64-apple-tvos` | * |  | ARM64 tvOS
 `aarch64-unknown-freebsd` | ✓ | ✓ | ARM64 FreeBSD
 `aarch64-unknown-hermit` | ? |  |
@@ -207,6 +207,7 @@ target | std | host | notes
 `riscv64gc-unknown-linux-musl` |   |   | RISC-V Linux (kernel 4.20, musl 1.2.0)
 `riscv32gc-unknown-linux-gnu` |   |   | RISC-V Linux (kernel 5.4, glibc 2.33)
 `riscv32gc-unknown-linux-musl` |   |   | RISC-V Linux (kernel 5.4, musl + RISCV32 support patches)
+`s390x-unknown-linux-musl` |  |  | S390x Linux (kernel 2.6.32, MUSL)
 `sparc-unknown-linux-gnu` | ✓ |  | 32-bit SPARC Linux
 `sparc64-unknown-netbsd` | ✓ | ✓ | NetBSD/sparc64
 `sparc64-unknown-openbsd` | ? |  |
@@ -217,7 +218,7 @@ target | std | host | notes
 `x86_64-apple-ios-macabi` | ✓ |  | Apple Catalyst on x86_64
 `x86_64-apple-tvos` | * | | x86 64-bit tvOS
 `x86_64-linux-kernel` | * |  | Linux kernel modules
-`x86_64-pc-solaris` | ? |  |
+`x86_64-sun-solaris` | ? |  | Deprecated target for 64-bit Solaris 10/11, illumos
 `x86_64-pc-windows-msvc` | ✓ |  | 64-bit Windows XP support
 `x86_64-unknown-dragonfly` | ✓ | ✓ | 64-bit DragonFlyBSD
 `x86_64-unknown-haiku` | ✓ | ✓ | 64-bit Haiku

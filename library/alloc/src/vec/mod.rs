@@ -216,7 +216,7 @@ mod spec_extend;
 /// # Slicing
 ///
 /// A `Vec` can be mutable. Slices, on the other hand, are read-only objects.
-/// To get a [slice], use [`&`]. Example:
+/// To get a [slice][prim@slice], use [`&`]. Example:
 ///
 /// ```
 /// fn read_slice(slice: &[usize]) {
@@ -369,8 +369,6 @@ mod spec_extend;
 /// [`reserve`]: Vec::reserve
 /// [`MaybeUninit`]: core::mem::MaybeUninit
 /// [owned slice]: Box
-/// [slice]: ../../std/primitive.slice.html
-/// [`&`]: ../../std/primitive.reference.html
 #[stable(feature = "rust1", since = "1.0.0")]
 #[cfg_attr(not(test), rustc_diagnostic_item = "vec_type")]
 pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
@@ -1651,7 +1649,7 @@ impl<T, A: Allocator> Vec<T, A> {
         // the hole, and the vector length is restored to the new length.
         //
         let len = self.len();
-        let Range { start, end } = range.assert_len(len);
+        let Range { start, end } = slice::range(range, ..len);
 
         unsafe {
             // set self.vec length's to start, to be safe in case Drain is leaked
@@ -1879,7 +1877,15 @@ impl<T, A: Allocator> Vec<T, A> {
     #[unstable(feature = "vec_spare_capacity", issue = "75017")]
     #[inline]
     pub fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<T>] {
-        self.split_at_spare_mut().1
+        // Note:
+        // This method is not implemented in terms of `split_at_spare_mut`,
+        // to prevent invalidation of pointers to the buffer.
+        unsafe {
+            slice::from_raw_parts_mut(
+                self.as_mut_ptr().add(self.len) as *mut MaybeUninit<T>,
+                self.buf.capacity() - self.len,
+            )
+        }
     }
 
     /// Returns vector content as a slice of `T`, along with the remaining spare
@@ -1936,20 +1942,16 @@ impl<T, A: Allocator> Vec<T, A> {
     #[unstable(feature = "vec_split_at_spare", issue = "81944")]
     #[inline]
     pub fn split_at_spare_mut(&mut self) -> (&mut [T], &mut [MaybeUninit<T>]) {
-        let ptr = self.as_mut_ptr();
+        let Range { start: ptr, end: spare_ptr } = self.as_mut_ptr_range();
+        let spare_ptr = spare_ptr.cast::<MaybeUninit<T>>();
+        let spare_len = self.buf.capacity() - self.len;
 
-        // Safety:
-        // - `ptr` is guaranteed to be in bounds for `capacity` elements
-        // - `len` is guaranteed to less or equal to `capacity`
-        // - `MaybeUninit<T>` has the same layout as `T`
-        let spare_ptr = unsafe { ptr.cast::<MaybeUninit<T>>().add(self.len) };
-
-        // Safety:
+        // SAFETY:
         // - `ptr` is guaranteed to be valid for `len` elements
-        // - `spare_ptr` is offseted from `ptr` by `len`, so it doesn't overlap `initialized` slice
+        // - `spare_ptr` is pointing one element past the buffer, so it doesn't overlap with `initialized`
         unsafe {
             let initialized = slice::from_raw_parts_mut(ptr, self.len);
-            let spare = slice::from_raw_parts_mut(spare_ptr, self.buf.capacity() - self.len);
+            let spare = slice::from_raw_parts_mut(spare_ptr, spare_len);
 
             (initialized, spare)
         }
@@ -2037,11 +2039,11 @@ impl<T: Clone, A: Allocator> Vec<T, A> {
     where
         R: RangeBounds<usize>,
     {
-        let range = src.assert_len(self.len());
+        let range = slice::range(src, ..self.len());
         self.reserve(range.len());
 
         // SAFETY:
-        // - `assert_len` guarantees  that the given range is valid for indexing self
+        // - `slice::range` guarantees  that the given range is valid for indexing self
         unsafe {
             self.spec_extend_from_within(range);
         }
@@ -2154,7 +2156,8 @@ pub fn from_elem_in<T: Clone, A: Allocator>(elem: T, n: usize, alloc: A) -> Vec<
 }
 
 trait ExtendFromWithinSpec {
-    /// Safety:
+    /// # Safety
+    ///
     /// - `src` needs to be valid index
     /// - `self.capacity() - self.len()` must be `>= src.len()`
     unsafe fn spec_extend_from_within(&mut self, src: Range<usize>);
@@ -2165,14 +2168,14 @@ impl<T: Clone, A: Allocator> ExtendFromWithinSpec for Vec<T, A> {
         let initialized = {
             let (this, spare) = self.split_at_spare_mut();
 
-            // Safety:
+            // SAFETY:
             // - caller guaratees that src is a valid index
             let to_clone = unsafe { this.get_unchecked(src) };
 
             to_clone.iter().cloned().zip(spare.iter_mut()).map(|(e, s)| s.write(e)).count()
         };
 
-        // Safety:
+        // SAFETY:
         // - elements were just initialized
         unsafe {
             let new_len = self.len() + initialized;
@@ -2187,11 +2190,11 @@ impl<T: Copy, A: Allocator> ExtendFromWithinSpec for Vec<T, A> {
         {
             let (init, spare) = self.split_at_spare_mut();
 
-            // Safety:
+            // SAFETY:
             // - caller guaratees that `src` is a valid index
             let source = unsafe { init.get_unchecked(src) };
 
-            // Safety:
+            // SAFETY:
             // - Both pointers are created from unique slice references (`&mut [_]`)
             //   so they are valid and do not overlap.
             // - Elements are :Copy so it's OK to to copy them, without doing
@@ -2203,7 +2206,7 @@ impl<T: Copy, A: Allocator> ExtendFromWithinSpec for Vec<T, A> {
             unsafe { ptr::copy_nonoverlapping(source.as_ptr(), spare.as_mut_ptr() as _, count) };
         }
 
-        // Safety:
+        // SAFETY:
         // - The elements were just initialized by `copy_nonoverlapping`
         self.len += count;
     }
@@ -2516,7 +2519,7 @@ impl<T, A: Allocator> Vec<T, A> {
 /// This implementation is specialized for slice iterators, where it uses [`copy_from_slice`] to
 /// append the entire slice at once.
 ///
-/// [`copy_from_slice`]: ../../std/primitive.slice.html#method.copy_from_slice
+/// [`copy_from_slice`]: slice::copy_from_slice
 #[stable(feature = "extend_ref", since = "1.2.0")]
 impl<'a, T: Copy + 'a, A: Allocator + 'a> Extend<&'a T> for Vec<T, A> {
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {

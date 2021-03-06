@@ -3,10 +3,10 @@ use crate::module::DirectoryOwnership;
 
 use rustc_ast::ptr::P;
 use rustc_ast::token::{self, Nonterminal};
-use rustc_ast::tokenstream::{CanSynthesizeMissingTokens, TokenStream};
+use rustc_ast::tokenstream::{CanSynthesizeMissingTokens, LazyTokenStream, TokenStream};
 use rustc_ast::visit::{AssocCtxt, Visitor};
-use rustc_ast::{self as ast, Attribute, NodeId, PatKind};
-use rustc_attr::{self as attr, Deprecation, HasAttrs, Stability};
+use rustc_ast::{self as ast, AstLike, Attribute, NodeId, PatKind};
+use rustc_attr::{self as attr, Deprecation, Stability};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_data_structures::sync::{self, Lrc};
 use rustc_errors::{DiagnosticBuilder, ErrorReported};
@@ -44,7 +44,7 @@ pub enum Annotatable {
     Variant(ast::Variant),
 }
 
-impl HasAttrs for Annotatable {
+impl AstLike for Annotatable {
     fn attrs(&self) -> &[Attribute] {
         match *self {
             Annotatable::Item(ref item) => &item.attrs,
@@ -79,6 +79,10 @@ impl HasAttrs for Annotatable {
             Annotatable::StructField(sf) => sf.visit_attrs(f),
             Annotatable::Variant(v) => v.visit_attrs(f),
         }
+    }
+
+    fn finalize_tokens(&mut self, tokens: LazyTokenStream) {
+        panic!("Called finalize_tokens on an Annotatable: {:?}", tokens);
     }
 }
 
@@ -756,8 +760,8 @@ impl SyntaxExtension {
         name: Symbol,
         attrs: &[ast::Attribute],
     ) -> SyntaxExtension {
-        let allow_internal_unstable = attr::allow_internal_unstable(sess, &attrs)
-            .map(|features| features.collect::<Vec<Symbol>>().into());
+        let allow_internal_unstable =
+            Some(attr::allow_internal_unstable(sess, &attrs).collect::<Vec<Symbol>>().into());
 
         let mut local_inner_macros = false;
         if let Some(macro_export) = sess.find_by_name(attrs, sym::macro_export) {
@@ -770,10 +774,16 @@ impl SyntaxExtension {
             .find_by_name(attrs, sym::rustc_builtin_macro)
             .map(|a| a.value_str().unwrap_or(name));
         let (stability, const_stability) = attr::find_stability(&sess, attrs, span);
-        if const_stability.is_some() {
+        if let Some((_, sp)) = const_stability {
             sess.parse_sess
                 .span_diagnostic
-                .span_err(span, "macros cannot have const stability attributes");
+                .struct_span_err(sp, "macros cannot have const stability attributes")
+                .span_label(sp, "invalid const stability attribute")
+                .span_label(
+                    sess.source_map().guess_head_span(span),
+                    "const stability attribute affects this macro",
+                )
+                .emit();
         }
 
         SyntaxExtension {
@@ -782,7 +792,7 @@ impl SyntaxExtension {
             allow_internal_unstable,
             allow_internal_unsafe: sess.contains_name(attrs, sym::allow_internal_unsafe),
             local_inner_macros,
-            stability,
+            stability: stability.map(|(s, _)| s),
             deprecation: attr::find_deprecation(&sess, attrs).map(|(d, _)| d),
             helper_attrs,
             edition,
