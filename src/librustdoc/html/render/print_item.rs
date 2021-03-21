@@ -136,16 +136,13 @@ fn should_hide_fields(n_fields: usize) -> bool {
     n_fields > 5
 }
 
-fn toggle_open(w: &mut Buffer, text: &str)
-{
+fn toggle_open(w: &mut Buffer, text: &str) {
     write!(w, "<div class=\"docblock type-contents-toggle\" data-toggle-text=\"{}\">", text);
 }
 
-fn toggle_close(w: &mut Buffer)
-{
+fn toggle_close(w: &mut Buffer) {
     w.write_str("</div>");
 }
-
 
 fn item_module(w: &mut Buffer, cx: &Context<'_>, item: &clean::Item, items: &[clean::Item]) {
     document(w, cx, item, None);
@@ -1276,6 +1273,17 @@ fn render_union(
     }
 
     write!(w, " {{\n{}", tab);
+    let count_fields = fields
+        .iter()
+        .filter(
+            |f| if let clean::StructFieldItem(..) = *f.kind { true } else { false },
+        )
+        .count();
+    let toggle = should_hide_fields(count_fields);
+    if toggle {
+        toggle_open(w, "fields");
+    }
+
     for field in fields {
         if let clean::StructFieldItem(ref ty) = *field.kind {
             write!(
@@ -1291,6 +1299,9 @@ fn render_union(
 
     if it.has_stripped_fields().unwrap() {
         write!(w, "    // some fields omitted\n{}", tab);
+    }
+    if toggle {
+        toggle_close(w);
     }
     w.write_str("}");
 }
@@ -1324,8 +1335,18 @@ fn render_struct(
                     WhereClause { gens: g, indent: 0, end_newline: true }.print(cx.cache())
                 )
             }
-            let mut has_visible_fields = false;
             w.write_str(" {");
+            let count_fields = fields
+                .iter()
+                .filter(
+                    |f| if let clean::StructFieldItem(..) = *f.kind { true } else { false },
+                )
+                .count();
+            let has_visible_fields = count_fields > 0;
+            let toggle = should_hide_fields(count_fields);
+            if toggle {
+                toggle_open(w, "fields");
+            }
             for field in fields {
                 if let clean::StructFieldItem(ref ty) = *field.kind {
                     write!(
@@ -1336,7 +1357,6 @@ fn render_struct(
                         field.name.as_ref().unwrap(),
                         ty.print(cx.cache())
                     );
-                    has_visible_fields = true;
                 }
             }
 
@@ -1349,6 +1369,9 @@ fn render_struct(
                 // If there are no visible fields we can just display
                 // `{ /* fields omitted */ }` to save space.
                 write!(w, " /* fields omitted */ ");
+            }
+            if toggle {
+                toggle_close(w);
             }
             w.write_str("}");
         }
