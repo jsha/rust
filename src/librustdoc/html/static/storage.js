@@ -1,6 +1,5 @@
 // From rust:
 /* global resourcesSuffix */
-
 var darkThemes = ["dark", "ayu"];
 var currentTheme = document.getElementById("themeStyle");
 var mainTheme = document.getElementById("mainThemeStyle");

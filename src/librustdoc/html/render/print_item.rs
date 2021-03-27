@@ -11,8 +11,8 @@ use rustc_span::symbol::{kw, sym, Symbol};
 
 use super::{
     collect_paths_for_type, document, ensure_trailing_slash, item_ty_to_strs, render_assoc_item,
-    render_assoc_items, render_attributes, render_impl, render_stability_since_raw, spotlight_decl,
-    write_srclink, AssocItemLink, Context,
+    render_assoc_items, render_attributes_in_code, render_attributes_in_pre, render_impl,
+    render_stability_since_raw, spotlight_decl, write_srclink, AssocItemLink, Context,
 };
 use crate::clean::{self, GetDefId};
 use crate::formats::cache::Cache;
@@ -137,11 +137,15 @@ fn should_hide_fields(n_fields: usize) -> bool {
 }
 
 fn toggle_open(w: &mut Buffer, text: &str) {
-    write!(w, "<div class=\"docblock type-contents-toggle\" data-toggle-text=\"{}\">", text);
+    write!(
+        w,
+        "<details class=\"type-contents-toggle\"><summary class=\"hideme\"><span>Show {}</span></summary>",
+        text
+    );
 }
 
 fn toggle_close(w: &mut Buffer) {
-    w.write_str("</div>");
+    w.write_str("</details>");
 }
 
 fn item_module(w: &mut Buffer, cx: &Context<'_>, item: &clean::Item, items: &[clean::Item]) {
@@ -390,7 +394,7 @@ fn item_function(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, f: &clean::
     )
     .len();
     w.write_str("<pre class=\"rust fn\">");
-    render_attributes(w, it, false);
+    render_attributes_in_pre(w, it, "");
     write!(
         w,
         "{vis}{constness}{asyncness}{unsafety}{abi}fn \
@@ -421,7 +425,7 @@ fn item_trait(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::Tra
     // Output the trait definition
     wrap_into_docblock(w, |w| {
         w.write_str("<pre class=\"rust trait\">");
-        render_attributes(w, it, true);
+        render_attributes_in_pre(w, it, "");
         write!(
             w,
             "{}{}{}trait {}{}{}",
@@ -731,7 +735,7 @@ fn item_trait(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::Tra
 
 fn item_trait_alias(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::TraitAlias) {
     w.write_str("<pre class=\"rust trait-alias\">");
-    render_attributes(w, it, false);
+    render_attributes_in_pre(w, it, "");
     write!(
         w,
         "trait {}{}{} = {};</pre>",
@@ -752,7 +756,7 @@ fn item_trait_alias(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clea
 
 fn item_opaque_ty(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::OpaqueTy) {
     w.write_str("<pre class=\"rust opaque\">");
-    render_attributes(w, it, false);
+    render_attributes_in_pre(w, it, "");
     write!(
         w,
         "type {}{}{where_clause} = impl {bounds};</pre>",
@@ -774,7 +778,7 @@ fn item_opaque_ty(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean:
 
 fn item_typedef(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::Typedef) {
     w.write_str("<pre class=\"rust typedef\">");
-    render_attributes(w, it, false);
+    render_attributes_in_pre(w, it, "");
     write!(
         w,
         "type {}{}{where_clause} = {type_};</pre>",
@@ -797,7 +801,7 @@ fn item_typedef(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::T
 fn item_union(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::Union) {
     wrap_into_docblock(w, |w| {
         w.write_str("<pre class=\"rust union\">");
-        render_attributes(w, it, true);
+        render_attributes_in_pre(w, it, "");
         render_union(w, it, Some(&s.generics), &s.fields, "", true, cx);
         w.write_str("</pre>")
     });
@@ -843,7 +847,7 @@ fn item_union(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::Uni
 fn item_enum(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, e: &clean::Enum) {
     wrap_into_docblock(w, |w| {
         w.write_str("<pre class=\"rust enum\">");
-        render_attributes(w, it, true);
+        render_attributes_in_pre(w, it, "");
         write!(
             w,
             "{}enum {}{}{}",
@@ -1023,7 +1027,7 @@ fn item_primitive(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item) {
 
 fn item_constant(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, c: &clean::Constant) {
     w.write_str("<pre class=\"rust const\">");
-    render_attributes(w, it, false);
+    render_attributes_in_code(w, it);
 
     write!(
         w,
@@ -1059,7 +1063,7 @@ fn item_constant(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, c: &clean::
 fn item_struct(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::Struct) {
     wrap_into_docblock(w, |w| {
         w.write_str("<pre class=\"rust struct\">");
-        render_attributes(w, it, true);
+        render_attributes_in_code(w, it);
         render_struct(w, it, Some(&s.generics), s.struct_type, &s.fields, "", true, cx);
         w.write_str("</pre>")
     });
@@ -1108,7 +1112,7 @@ fn item_struct(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::St
 
 fn item_static(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::Static) {
     w.write_str("<pre class=\"rust static\">");
-    render_attributes(w, it, false);
+    render_attributes_in_code(w, it);
     write!(
         w,
         "{vis}static {mutability}{name}: {typ}</pre>",
@@ -1122,7 +1126,7 @@ fn item_static(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, s: &clean::St
 
 fn item_foreign_type(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item) {
     w.write_str("<pre class=\"rust foreigntype\">extern {\n");
-    render_attributes(w, it, false);
+    render_attributes_in_code(w, it);
     write!(
         w,
         "    {}type {};\n}}</pre>",
@@ -1295,10 +1299,8 @@ fn render_union(
     }
 
     write!(w, " {{\n{}", tab);
-    let count_fields = fields
-        .iter()
-        .filter(|f| matches!(clean::StructFieldItem(..), *f.kind))
-        .count();
+    let count_fields =
+        fields.iter().filter(|f| matches!(*f.kind, clean::StructFieldItem(..))).count();
     let toggle = should_hide_fields(count_fields);
     if toggle {
         toggle_open(w, "fields");
@@ -1356,10 +1358,8 @@ fn render_struct(
                 )
             }
             w.write_str(" {");
-            let count_fields = fields
-                .iter()
-                .filter(|f| matches!(clean::StructFieldItem(..) = *f.kind))
-                .count();
+            let count_fields =
+                fields.iter().filter(|f| matches!(*f.kind, clean::StructFieldItem(..))).count();
             let has_visible_fields = count_fields > 0;
             let toggle = should_hide_fields(count_fields);
             if toggle {

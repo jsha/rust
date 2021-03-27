@@ -1,4 +1,3 @@
-// ignore-tidy-filelength
 // Local js definitions:
 /* global addClass, getSettingValue, hasClass */
 /* global onEach, onEachLazy, hasOwnProperty, removeClass, updateLocalStorage */
@@ -2252,6 +2251,9 @@ function defocusSearchBar() {
         if (hasClass(innerToggle, "will-expand")) {
             updateLocalStorage("rustdoc-collapse", "false");
             removeClass(innerToggle, "will-expand");
+            onEachLazy(document.getElementsByTagName("details"), function(e) {
+                e.open = true;
+            });
             onEveryMatchingChild(innerToggle, "inner", function(e) {
                 e.innerHTML = labelForToggleButton(false);
             });
@@ -2264,6 +2266,9 @@ function defocusSearchBar() {
         } else {
             updateLocalStorage("rustdoc-collapse", "true");
             addClass(innerToggle, "will-expand");
+            onEachLazy(document.getElementsByTagName("details"), function(e) {
+                e.open = false;
+            });
             onEveryMatchingChild(innerToggle, "inner", function(e) {
                 var parent = e.parentNode;
                 var superParent = null;
@@ -2505,6 +2510,7 @@ function defocusSearchBar() {
         var toggle = createSimpleToggle(false);
         var hideMethodDocs = getSettingValue("auto-hide-method-docs") === "true";
         var hideImplementors = getSettingValue("auto-collapse-implementors") !== "false";
+        let hideLargeItemContents = getSettingValue("auto-hide-large-items") !== "false";
 
         var func = function(e) {
             var next = e.nextElementSibling;
@@ -2551,6 +2557,14 @@ function defocusSearchBar() {
         onEachLazy(document.getElementsByClassName("associatedconstant"), func);
         onEachLazy(document.getElementsByClassName("impl"), funcImpl);
         var impl_call = function() {};
+        // Large items are hidden by default in the HTML. If the setting overrides that, show 'em.
+        if (!hideLargeItemContents) {
+            onEachLazy(document.getElementsByTagName("details"), function (e) {
+                if (hasClass(e, "type-contents-toggle")) {
+                    e.open = true;
+                }
+            });
+        }
         if (hideMethodDocs === true) {
             impl_call = function(e, newToggle) {
                 if (e.id.match(/^impl(?:-\d+)?$/) === null) {
@@ -2639,14 +2653,6 @@ function defocusSearchBar() {
                         }
                     });
                 }
-            } else if (hasClass(e, "type-contents-toggle")) {
-                let text = e.getAttribute("data-toggle-text");
-                let hideItemContents = getSettingValue("auto-hide-large-items") !== "false";
-                let tog = createToggle(toggle, `Show ${text}`, null, "", !hideItemContents);
-                e.parentNode.insertBefore(tog,  e);
-                if (hideItemContents) {
-                    collapseDocs(e.previousSibling.childNodes[0], "toggle");
-                }
             }
             if (e.parentNode.id === "main") {
                 var otherMessage = "";
@@ -2680,7 +2686,7 @@ function defocusSearchBar() {
                         otherMessage,
                         fontSize,
                         extraClass,
-                        false),
+                        true),
                     e);
                 if (hasClass(e, "non-exhaustive") === true) {
                     collapseDocs(e.previousSibling.childNodes[0], "toggle");
@@ -2697,38 +2703,6 @@ function defocusSearchBar() {
         if (pageId !== null) {
             expandSection(pageId);
         }
-    }());
-
-    function createToggleWrapper(tog) {
-        var span = document.createElement("span");
-        span.className = "toggle-label";
-        span.style.display = "none";
-        span.innerHTML = "&nbsp;Expand&nbsp;attributes";
-        tog.appendChild(span);
-
-        var wrapper = document.createElement("div");
-        wrapper.className = "toggle-wrapper toggle-attributes";
-        wrapper.appendChild(tog);
-        return wrapper;
-    }
-
-    (function() {
-        // To avoid checking on "rustdoc-item-attributes" value on every loop...
-        var itemAttributesFunc = function() {};
-        if (getSettingValue("auto-hide-attributes") !== "false") {
-            itemAttributesFunc = function(x) {
-                collapseDocs(x.previousSibling.childNodes[0], "toggle");
-            };
-        }
-        var attributesToggle = createToggleWrapper(createSimpleToggle(false));
-        onEachLazy(main.getElementsByClassName("attributes"), function(i_e) {
-            var attr_tog = attributesToggle.cloneNode(true);
-            if (hasClass(i_e, "top-attr") === true) {
-                addClass(attr_tog, "top-attr");
-            }
-            i_e.parentNode.insertBefore(attr_tog, i_e);
-            itemAttributesFunc(i_e);
-        });
     }());
 
     (function() {

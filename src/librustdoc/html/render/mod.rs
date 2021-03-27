@@ -44,7 +44,6 @@ use std::str;
 use std::string::ToString;
 use std::sync::mpsc::Receiver;
 
-use itertools::Itertools;
 use rustc_ast_pretty::pprust;
 use rustc_attr::{Deprecation, StabilityLevel};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
@@ -575,7 +574,6 @@ fn settings(root_path: &str, suffix: &str, themes: &[StylePath]) -> Result<Strin
         )
             .into(),
         ("auto-hide-large-items", "Auto-hide item contents for large items.", true).into(),
-        ("auto-hide-attributes", "Auto-hide item attributes.", true).into(),
         ("auto-hide-method-docs", "Auto-hide item methods' documentation", false).into(),
         ("auto-hide-trait-implementations", "Auto-hide trait implementation documentation", true)
             .into(),
@@ -1011,18 +1009,20 @@ fn render_assoc_item(
             g.print(cx.cache())
         )
         .len();
-        let (indent, end_newline) = if parent == ItemType::Trait {
+        let (indent, indent_str, end_newline) = if parent == ItemType::Trait {
             header_len += 4;
-            (4, false)
+            let indent_str = "    ";
+            render_attributes_in_pre(w, meth, indent_str);
+            (4, indent_str, false)
         } else {
-            (0, true)
+            render_attributes_in_code(w, meth);
+            (0, "", true)
         };
-        render_attributes(w, meth, false);
         write!(
             w,
             "{}{}{}{}{}{}{}fn <a href=\"{href}\" class=\"fnname\">{name}</a>\
              {generics}{decl}{spotlight}{where_clause}",
-            if parent == ItemType::Trait { "    " } else { "" },
+            indent_str,
             meth.visibility.print_with_space(cx.tcx(), meth.def_id, cx.cache()),
             header.constness.print_with_space(),
             header.asyncness.print_with_space(),
@@ -1078,35 +1078,33 @@ const ALLOWED_ATTRIBUTES: &[Symbol] = &[
     sym::non_exhaustive,
 ];
 
-// The `top` parameter is used when generating the item declaration to ensure it doesn't have a
-// left padding. For example:
-//
-// #[foo] <----- "top" attribute
-// struct Foo {
-//     #[bar] <---- not "top" attribute
-//     bar: usize,
-// }
-fn render_attributes(w: &mut Buffer, it: &clean::Item, top: bool) {
-    let attrs = it
-        .attrs
+fn attributes(it: &clean::Item) -> Vec<String> {
+    it.attrs
         .other_attrs
         .iter()
         .filter_map(|attr| {
             if ALLOWED_ATTRIBUTES.contains(&attr.name_or_empty()) {
-                Some(pprust::attribute_to_string(&attr))
+                Some(pprust::attribute_to_string(&attr).replace("\n", "").replace("  ", " "))
             } else {
                 None
             }
         })
-        .join("\n");
+        .collect()
+}
 
-    if !attrs.is_empty() {
-        write!(
-            w,
-            "<span class=\"docblock attributes{}\">{}</span>",
-            if top { " top-attr" } else { "" },
-            &attrs
-        );
+// When an attribute is rendered inside a `<pre>` tag, it is formatted using
+// a whitespace prefix and newline.
+fn render_attributes_in_pre(w: &mut Buffer, it: &clean::Item, prefix: &str) {
+    for a in attributes(it) {
+        write!(w, "{}{}\n", prefix, a);
+    }
+}
+
+// When an attribute is rendered inside a <code> tag, it is formatted using
+// a div to produce a newline after it.
+fn render_attributes_in_code(w: &mut Buffer, it: &clean::Item) {
+    for a in attributes(it) {
+        write!(w, "<div>{}</div>", a);
     }
 }
 
