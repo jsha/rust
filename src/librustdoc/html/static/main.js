@@ -80,9 +80,9 @@ function getSearchInput() {
     return document.getElementsByClassName("search-input")[0];
 }
 
-function getSearchElement() {
+window.getSearchElement = function() {
     return document.getElementById("search");
-}
+};
 
 var THEME_PICKER_ELEMENT_ID = "theme-picker";
 var THEMES_ELEMENT_ID = "theme-choices";
@@ -172,29 +172,79 @@ function hideThemeButtonState() {
 (function() {
     "use strict";
 
-    var disableShortcuts = getSettingValue("disable-shortcuts") === "true";
-    window.search_input = getSearchInput();
-    var searchTimeout = null;
-    var toggleAllDocsId = "toggle-all-docs";
-
-    // On the search screen, so you remain on the last tab you opened.
-    //
-    // 0 for "In Names"
-    // 1 for "In Parameters"
-    // 2 for "In Return Types"
-    window.currentTab = 0;
-
-    window.mouseMovedAfterSearch = true;
-
-    var titleBeforeSearch = document.title;
-    window.searchTitle = null;
-
-    window.clearInputTimeout = function() {
-        if (searchTimeout !== null) {
-            clearTimeout(searchTimeout);
-            searchTimeout = null;
+    window.searchState = {
+      loadingText: "Loading search results...",
+      input: getSearchInput(),
+      output: document.getElementById("search"),
+      title: null,
+      titleBeforeSearch: document.title,
+      timeout: null,
+      // On the search screen, so you remain on the last tab you opened.
+      //
+      // 0 for "In Names"
+      // 1 for "In Parameters"
+      // 2 for "In Return Types"
+      currentTab: 0,
+      mouseMovedAfterSearch: true,
+      clearInputTimeout: function() {
+        if (searchState.timeout !== null) {
+            clearTimeout(searchState.timeout);
+            searchState.timeout = null;
         }
+      },
+      showResults: function(search) {
+        if (search === null || typeof search === 'undefined') {
+            search = getSearchElement();
+        }
+        addClass(main, "hidden");
+        removeClass(search, "hidden");
+        searchState.mouseMovedAfterSearch = false;
+        document.title = searchState.title;
+      },
+      hideResults: function(search) {
+        if (search === null || typeof search === 'undefined') {
+            search = getSearchElement();
+        }
+        addClass(search, "hidden");
+        removeClass(main, "hidden");
+        document.title = searchState.titleBeforeSearch;
+        // We also remove the query parameter from the URL.
+        if (browserSupportsHistoryApi()) {
+            history.replaceState("", window.currentCrate + " - Rust",
+                getNakedUrl() + window.location.hash);
+        }
+      },
+      getQueryStringParams: function() {
+        var params = {};
+        window.location.search.substring(1).split("&").
+            map(function(s) {
+                var pair = s.split("=");
+                params[decodeURIComponent(pair[0])] =
+                    typeof pair[1] === "undefined" ? null : decodeURIComponent(pair[1]);
+            });
+        return params;
+      },
+      putBackSearch: function(search_input) {
+        var search = getSearchElement();
+        if (search_input.value !== "" && hasClass(search, "hidden")) {
+            searchState.showResults(search);
+            if (browserSupportsHistoryApi()) {
+                var extra = "?search=" + encodeURIComponent(search_input.value);
+                history.replaceState(search_input.value, "",
+                    getNakedUrl() + extra + window.location.hash);
+            }
+            document.title = searchState.title;
+        }
+      },
     };
+
+    if (searchState.input) {
+        searchState.input.onfocus = function() {
+            searchState.putBackSearch(this);
+        };
+    }
+
+    var toggleAllDocsId = "toggle-all-docs";
 
     function getPageId() {
         if (window.location.hash) {
@@ -237,41 +287,6 @@ function hideThemeButtonState() {
         document.getElementsByTagName("body")[0].style.marginTop = "";
     }
 
-    window.showSearchResults = function(search) {
-        if (search === null || typeof search === 'undefined') {
-            search = getSearchElement();
-        }
-        addClass(main, "hidden");
-        removeClass(search, "hidden");
-        mouseMovedAfterSearch = false;
-        document.title = searchTitle;
-    };
-
-    window.hideSearchResults = function(search) {
-        if (search === null || typeof search === 'undefined') {
-            search = getSearchElement();
-        }
-        addClass(search, "hidden");
-        removeClass(main, "hidden");
-        document.title = titleBeforeSearch;
-        // We also remove the query parameter from the URL.
-        if (browserSupportsHistoryApi()) {
-            history.replaceState("", window.currentCrate + " - Rust",
-                getNakedUrl() + window.location.hash);
-        }
-    };
-
-    window.getQueryStringParams = function() {
-        var params = {};
-        window.location.search.substring(1).split("&").
-            map(function(s) {
-                var pair = s.split("=");
-                params[decodeURIComponent(pair[0])] =
-                    typeof pair[1] === "undefined" ? null : decodeURIComponent(pair[1]);
-            });
-        return params;
-    };
-
     window.browserSupportsHistoryApi = function() {
         return window.history && typeof window.history.pushState === "function";
     };
@@ -289,7 +304,7 @@ function hideThemeButtonState() {
         if (ev !== null && search && !hasClass(search, "hidden") && ev.newURL) {
             // This block occurs when clicking on an element in the navbar while
             // in a search.
-            hideSearchResults(search);
+            searchState.hideResults(search);
             var hash = ev.newURL.slice(ev.newURL.indexOf("#") + 1);
             if (browserSupportsHistoryApi()) {
                 // `window.location.search`` contains all the query parameters, not just `search`.
@@ -436,14 +451,15 @@ function hideThemeButtonState() {
         if (hasClass(help, "hidden") === false) {
             displayHelp(false, ev, help);
         } else if (hasClass(search, "hidden") === false) {
-            clearInputTimeout();
+            searchState.clearInputTimeout();
             ev.preventDefault();
-            hideSearchResults(search);
+            searchState.hideResults(search);
         }
         defocusSearchBar();
         hideThemeButtonState();
     }
 
+    var disableShortcuts = getSettingValue("disable-shortcuts") === "true";
     function handleShortcut(ev) {
         // Don't interfere with browser shortcuts
         if (ev.ctrlKey || ev.altKey || ev.metaKey || disableShortcuts === true) {
@@ -553,7 +569,9 @@ function hideThemeButtonState() {
     document.addEventListener("keypress", handleShortcut);
     document.addEventListener("keydown", handleShortcut);
 
-    document.addEventListener("mousemove", function() { mouseMovedAfterSearch = true; });
+    document.addEventListener("mousemove", function() {
+      searchState.mouseMovedAfterSearch = true;
+    });
 
     var handleSourceHighlight = (function() {
         var prev_line_id = 0;
@@ -1366,34 +1384,11 @@ function hideThemeButtonState() {
         };
     });
 
-    window.putBackSearch = function(search_input) {
-        var search = getSearchElement();
-        if (search_input.value !== "" && hasClass(search, "hidden")) {
-            showSearchResults(search);
-            if (browserSupportsHistoryApi()) {
-                var extra = "?search=" + encodeURIComponent(search_input.value);
-                history.replaceState(search_input.value, "",
-                    getNakedUrl() + extra + window.location.hash);
-            }
-            document.title = searchTitle;
-        }
-    };
-
-    function getSearchLoadingText() {
-        return "Loading search results...";
-    }
-
-    if (search_input) {
-        search_input.onfocus = function() {
-            putBackSearch(this);
-        };
-    }
-
-    var params = getQueryStringParams();
+    var params = searchState.getQueryStringParams();
     if (params && params.search) {
         var search = getSearchElement();
-        search.innerHTML = "<h3 style=\"text-align: center;\">" + getSearchLoadingText() + "</h3>";
-        showSearchResults(search);
+        search.innerHTML = "<h3 style=\"text-align: center;\">" + searchState.loadingText + "</h3>";
+        searchState.showResults(search);
     }
 
     var sidebar_menu = document.getElementsByClassName("sidebar-menu")[0];
@@ -1533,15 +1528,15 @@ function hideThemeButtonState() {
         addSearchOptions(window.ALL_CRATES);
         addSidebarCrates(window.ALL_CRATES);
 
-        search_input.addEventListener("focus", function() {
-            search_input.origPlaceholder = search_input.placeholder;
-            search_input.placeholder = "Type your search here.";
+        searchState.input.addEventListener("focus", function() {
+            searchState.input.origPlaceholder = searchState.input.placeholder;
+            searchState.input.placeholder = "Type your search here.";
             loadSearch();
         });
-        search_input.addEventListener("blur", function() {
-            search_input.placeholder = search_input.origPlaceholder;
+        searchState.input.addEventListener("blur", function() {
+            searchState.input.placeholder = searchState.input.origPlaceholder;
         });
-        search_input.removeAttribute('disabled');
+        searchState.input.removeAttribute('disabled');
 
         var crateSearchDropDown = document.getElementById("crate-search");
         // `crateSearchDropDown` can be null in case there is only crate because in that case, the
@@ -1549,7 +1544,7 @@ function hideThemeButtonState() {
         if (crateSearchDropDown) {
             crateSearchDropDown.addEventListener("focus", loadSearch);
         }
-        var params = getQueryStringParams();
+        var params = searchState.getQueryStringParams();
         if (params.search !== undefined) {
             loadSearch();
         }
