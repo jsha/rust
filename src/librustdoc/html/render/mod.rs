@@ -979,7 +979,10 @@ fn attributes(it: &clean::Item) -> Vec<String> {
         .other_attrs
         .iter()
         .filter_map(|attr| {
-            if ALLOWED_ATTRIBUTES.contains(&attr.name_or_empty()) {
+            let name = attr.name_or_empty();
+            if name == sym::must_use {
+                Some(format!("#[{}]", name.to_ident_string()))
+            } else if ALLOWED_ATTRIBUTES.contains(&name) {
                 Some(pprust::attribute_to_string(&attr).replace("\n", "").replace("  ", " "))
             } else {
                 None
