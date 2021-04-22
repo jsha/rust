@@ -755,6 +755,15 @@ a {
 	outline: 0;
 }
 
+.search-results {
+	display: none;
+	padding-bottom: 2em;
+}
+
+.search-results.active {
+	display: block;
+}
+
 .search-results .desc {
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -766,19 +775,9 @@ a {
 	display: block;
 }
 
-.content .search-results td:first-child {
+.result-name {
 	padding-right: 0;
 	width: 50%;
-}
-.content .search-results td:first-child a {
-	padding-right: 10px;
-}
-.content .search-results td:first-child a:after {
-	clear: both;
-	content: "";
-	display: block;
-}
-.content .search-results td:first-child a span {
 	float: left;
 }
 

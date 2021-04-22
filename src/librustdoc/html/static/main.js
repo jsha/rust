@@ -170,7 +170,6 @@ function hideThemeButtonState() {
       // 1 for "In Parameters"
       // 2 for "In Return Types"
       currentTab: 0,
-      mouseMovedAfterSearch: true,
       clearInputTimeout: function() {
         if (searchState.timeout !== null) {
             clearTimeout(searchState.timeout);
@@ -191,7 +190,6 @@ function hideThemeButtonState() {
         }
         addClass(main, "hidden");
         removeClass(search, "hidden");
-        searchState.mouseMovedAfterSearch = false;
         document.title = searchState.title;
       },
       hideResults: function(search) {
@@ -260,10 +258,6 @@ function hideThemeButtonState() {
         });
         search_input.addEventListener("blur", function() {
             search_input.placeholder = searchState.input.origPlaceholder;
-        });
-
-        document.addEventListener("mousemove", function() {
-          searchState.mouseMovedAfterSearch = true;
         });
 
         search_input.removeAttribute('disabled');

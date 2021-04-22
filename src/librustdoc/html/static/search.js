@@ -48,9 +48,9 @@ function printTab(nb) {
     });
     onEachLazy(document.getElementById("results").childNodes, function(elem) {
         if (nb === 0) {
-            elem.style.display = "";
+            addClass(elem, "active");
         } else {
-            elem.style.display = "none";
+            removeClass(elem, "active");
         }
         nb -= 1;
     });
@@ -879,103 +879,61 @@ window.initSearch = function(rawSearchIndex) {
         };
     }
 
+    function tabLeft() {
+        if (searchState.currentTab > 0) {
+            printTab(searchState.currentTab - 1);
+        }
+        focusFirstSearchResult();
+    }
+
+    function tabRight() {
+        if (searchState.currentTab < 2) {
+            printTab(searchState.currentTab + 1);
+        }
+        focusFirstSearchResult();
+    }
+
+    // focus the first search result on the active tab.
+    function focusFirstSearchResult() {
+        var res = document.querySelectorAll(".search-results.active a");
+        if (res.length > 0) {
+            res[0].focus();
+        }
+    }
+
     function initSearchNav() {
-        var hoverTimeout;
-
-        var click_func = function(e) {
-            var el = e.target;
-            // to retrieve the real "owner" of the event.
-            while (el.tagName !== "TR") {
-                el = el.parentNode;
-            }
-            var dst = e.target.getElementsByTagName("a");
-            if (dst.length < 1) {
-                return;
-            }
-            dst = dst[0];
-            if (window.location.pathname === dst.pathname) {
-                searchState.hideResults();
-                document.location.href = dst.href;
-            }
-        };
-        var mouseover_func = function(e) {
-            if (searchState.mouseMovedAfterSearch) {
-                var el = e.target;
-                // to retrieve the real "owner" of the event.
-                while (el.tagName !== "TR") {
-                    el = el.parentNode;
-                }
-                clearTimeout(hoverTimeout);
-                hoverTimeout = setTimeout(function() {
-                    onEachLazy(document.getElementsByClassName("search-results"), function(e) {
-                        onEachLazy(e.getElementsByClassName("result"), function(i_e) {
-                            removeClass(i_e, "highlighted");
-                        });
-                    });
-                    addClass(el, "highlighted");
-                }, 20);
-            }
-        };
-        onEachLazy(document.getElementsByClassName("search-results"), function(e) {
-            onEachLazy(e.getElementsByClassName("result"), function(i_e) {
-                i_e.onclick = click_func;
-                i_e.onmouseover = mouseover_func;
-            });
-        });
-
-        searchState.input.onkeydown = function(e) {
-            // "actives" references the currently highlighted item in each search tab.
-            // Each array in "actives" represents a tab.
-            var actives = [[], [], []];
-            // "current" is used to know which tab we're looking into.
-            var current = 0;
-            onEachLazy(document.getElementById("results").childNodes, function(e) {
-                onEachLazy(e.getElementsByClassName("highlighted"), function(h_e) {
-                    actives[current].push(h_e);
-                });
-                current += 1;
-            });
-
-            var currentTab = searchState.currentTab;
+        searchState.outputElement().addEventListener("keydown", function(e) {
+            // up and down arrow select next/previous search result, or the
+            // search box if we're already at the top.
             if (e.which === 38) { // up
-                if (e.ctrlKey) { // Going through result tabs.
-                    printTab(currentTab > 0 ? currentTab - 1 : 2);
+                var previous = document.activeElement.previousElementSibling;
+                if (previous) {
+                    previous.focus();
                 } else {
-                    if (!actives[currentTab].length ||
-                        !actives[currentTab][0].previousElementSibling) {
-                        return;
-                    }
-                    addClass(actives[currentTab][0].previousElementSibling, "highlighted");
-                    removeClass(actives[currentTab][0], "highlighted");
+                    searchState.focus();
                 }
                 e.preventDefault();
             } else if (e.which === 40) { // down
-                if (e.ctrlKey) { // Going through result tabs.
-                    printTab(currentTab > 1 ? 0 : currentTab + 1);
-                } else if (!actives[currentTab].length) {
-                    var results = document.getElementById("results").childNodes;
-                    if (results.length > 0) {
-                        var res = results[currentTab].getElementsByClassName("result");
-                        if (res.length > 0) {
-                            addClass(res[0], "highlighted");
-                        }
-                    }
-                } else if (actives[currentTab][0].nextElementSibling) {
-                    addClass(actives[currentTab][0].nextElementSibling, "highlighted");
-                    removeClass(actives[currentTab][0], "highlighted");
+                var next = document.activeElement.nextElementSibling;
+                if (next) {
+                    next.focus();
                 }
                 e.preventDefault();
-            } else if (e.which === 13) { // return
-                if (actives[currentTab].length) {
-                    document.location.href =
-                        actives[currentTab][0].getElementsByTagName("a")[0].href;
-                }
-            } else if (e.which === 16) { // shift
-                // Does nothing, it's just to avoid losing "focus" on the highlighted element.
-            } else if (actives[currentTab].length > 0) {
-                removeClass(actives[currentTab][0], "highlighted");
+            } else if (e.which === 37) { // left
+                tabLeft();
+                e.preventDefault();
+            } else if (e.which === 39) { // right
+                tabRight();
+                e.preventDefault();
             }
-        };
+        });
+
+        searchState.input.addEventListener("keydown", function(e) {
+            if (e.which === 40) { // down
+                focusFirstSearchResult();
+                e.preventDefault();
+            }
+        });
     }
 
     function buildHrefAndPath(item) {
@@ -1045,16 +1003,16 @@ window.initSearch = function(rawSearchIndex) {
     }
 
     function addTab(array, query, display) {
-        var extraStyle = "";
-        if (display === false) {
-            extraStyle = " style=\"display: none;\"";
+        var extraClass = "";
+        if (display === true) {
+            extraClass = " active";
         }
 
         var output = "";
         var duplicates = {};
         var length = 0;
         if (array.length > 0) {
-            output = "<table class=\"search-results\"" + extraStyle + ">";
+            output = "<div class=\"search-results " + extraClass + "\">";
 
             array.forEach(function(item) {
                 var name, type;
@@ -1070,18 +1028,17 @@ window.initSearch = function(rawSearchIndex) {
                 }
                 length += 1;
 
-                output += "<tr class=\"" + type + " result\"><td>" +
-                          "<a href=\"" + item.href + "\">" +
+                output += "<a class=\"result-" + type + "\" href=\"" + item.href + "\">" +
+                          "<div><div class=\"result-name\">" +
                           (item.is_alias === true ?
                            ("<span class=\"alias\"><b>" + item.alias + " </b></span><span " +
                               "class=\"grey\"><i>&nbsp;- see&nbsp;</i></span>") : "") +
                           item.displayPath + "<span class=\"" + type + "\">" +
-                          name + "</span></a></td><td>" +
-                          "<a href=\"" + item.href + "\">" +
+                          name + "</span></div><div>" +
                           "<span class=\"desc\">" + item.desc +
-                          "&nbsp;</span></a></td></tr>";
+                          "&nbsp;</span></div></div></a>";
             });
-            output += "</table>";
+            output += "</div>";
         } else {
             output = "<div class=\"search-failed\"" + extraStyle + ">No results :(<br/>" +
                 "Try on <a href=\"https://duckduckgo.com/?q=" +
@@ -1119,7 +1076,7 @@ window.initSearch = function(rawSearchIndex) {
         {
             var elem = document.createElement("a");
             elem.href = results.others[0].href;
-            elem.style.display = "none";
+            removeClass(elem, "active");
             // For firefox, we need the element to be in the DOM so it can be clicked.
             document.body.appendChild(elem);
             elem.click();
