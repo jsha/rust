@@ -139,7 +139,7 @@ h4.type.trait-impl, h4.associatedconstant.trait-impl {
 }
 
 h1, h2, h3, h4,
-.sidebar, a.source, .search-input, .content table td:first-child > a,
+.sidebar, a.source, .search-input, .search-results .result-name,
 .collapse-toggle, div.item-list .out-of-band,
 #source-sidebar, #sidebar-toggle,
 /* This selector is for the items listed in the "all items" page. */
@@ -772,11 +772,13 @@ a {
 }
 
 .search-results a {
+	/* A little margin ensures the browser's outlining of focused links has room to display. */
+	margin-left: 2px;
+	margin-right: 2px;
 	display: block;
 }
 
 .result-name {
-	padding-right: 0;
 	width: 50%;
 	float: left;
 }
