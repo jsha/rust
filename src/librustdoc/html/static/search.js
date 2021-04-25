@@ -902,6 +902,11 @@ window.initSearch = function(rawSearchIndex) {
     }
     function initSearchNav() {
         searchState.outputElement().addEventListener("keydown", function(e) {
+            // We only handle unmodified keystrokes here. We don't want to interfere with,
+            // for instance, alt-left and alt-right for history navigation.
+            if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+                return;
+            }
             // up and down arrow select next/previous search result, or the
             // search box if we're already at the top.
             if (e.which === 38) { // up
