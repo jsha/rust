@@ -1384,7 +1384,6 @@ window.initSearch = function(rawSearchIndex) {
             } else if (e.which === 40) { // down
                 var next = document.activeElement.nextElementSibling;
                 if (next) {
-                    console.log("nextElementSibling", next);
                     next.focus();
                 }
                 e.preventDefault();
