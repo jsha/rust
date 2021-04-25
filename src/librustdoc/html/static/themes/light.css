@@ -117,27 +117,26 @@ pre {
 	color: #000 !important;
 	background-color: #ccc;
 }
-.content a:focus,
-.content span:focus { color: #000 !important; }
-.content a.result-trait:focus { background-color: #c7b6ff; }
-.content a.result-traitalias:focus { background-color: #c7b6ff; }
-.content a.result-mod:focus,
-.content a.result-externcrate:focus { background-color: #afc6e4; }
-.content a.result-enum:focus { background-color: #b4d1b9; }
-.content a.result-struct:focus { background-color: #e7b1a0; }
-.content a.result-union:focus { background-color: #b7bd49; }
-.content a.result-fn:focus,
-.content a.result-method:focus,
-.content a.result-tymethod:focus { background-color: #c6afb3; }
-.content a.result-type:focus { background-color: #ffc891; }
-.content a.result-foreigntype:focus { background-color: #f5c4ff; }
-.content a.result-attr:focus,
-.content a.result-derive:focus,
-.content a.result-macro:focus { background-color: #8ce488; }
-.content a.result-constant:focus,
-.content a.result-static:focus { background-color: #c3e0ff; }
-.content a.result-primitive:focus { background-color: #9aecff; }
-.content a.result-keyword:focus { background-color: #f99650; }
+.search-results a:focus { color: #000 !important; }
+.result-trait:focus { background-color: #c7b6ff; }
+.result-traitalias:focus { background-color: #c7b6ff; }
+.result-mod:focus,
+.result-externcrate:focus { background-color: #afc6e4; }
+.result-enum:focus { background-color: #b4d1b9; }
+.result-struct:focus { background-color: #e7b1a0; }
+.result-union:focus { background-color: #b7bd49; }
+.result-fn:focus,
+.result-method:focus,
+.result-tymethod:focus { background-color: #c6afb3; }
+.result-type:focus { background-color: #ffc891; }
+.result-foreigntype:focus { background-color: #f5c4ff; }
+.result-attr:focus,
+.result-derive:focus,
+.result-macro:focus { background-color: #8ce488; }
+.result-constant:focus,
+.result-static:focus { background-color: #c3e0ff; }
+.result-primitive:focus { background-color: #9aecff; }
+.result-keyword:focus { background-color: #f99650; }
 
 .content .item-info::before { color: #ccc; }
 
