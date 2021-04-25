@@ -1040,7 +1040,7 @@ window.initSearch = function(rawSearchIndex) {
             });
             output += "</div>";
         } else {
-            output = "<div class=\"search-failed\"" + extraStyle + ">No results :(<br/>" +
+            output = "<div class=\"search-failed\"" + extraClass + ">No results :(<br/>" +
                 "Try on <a href=\"https://duckduckgo.com/?q=" +
                 encodeURIComponent("rust " + query.query) +
                 "\">DuckDuckGo</a>?<br/><br/>" +

@@ -179,6 +179,7 @@ function hideThemeButtonState() {
       // Sets the focus on the search bar at the top of the page
       focus: function() {
           searchState.input.focus();
+          searchState.input.scrollIntoView();
       },
       // Removes the focus from the search bar.
       defocus: function() {
