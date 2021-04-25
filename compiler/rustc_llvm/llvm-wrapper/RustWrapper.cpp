@@ -349,8 +349,10 @@ extern "C" void LLVMRustRemoveFunctionAttributes(LLVMValueRef Fn,
   F->setAttributes(PALNew);
 }
 
-// enable fpmath flag UnsafeAlgebra
-extern "C" void LLVMRustSetHasUnsafeAlgebra(LLVMValueRef V) {
+// Enable a fast-math flag
+//
+// https://llvm.org/docs/LangRef.html#fast-math-flags
+extern "C" void LLVMRustSetFastMath(LLVMValueRef V) {
   if (auto I = dyn_cast<Instruction>(unwrap<Value>(V))) {
     I->setFast(true);
   }
@@ -1298,9 +1300,19 @@ extern "C" LLVMTypeKind LLVMRustGetTypeKind(LLVMTypeRef Ty) {
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(SMDiagnostic, LLVMSMDiagnosticRef)
 
+#if LLVM_VERSION_LT(13, 0)
+using LLVMInlineAsmDiagHandlerTy = LLVMContext::InlineAsmDiagHandlerTy;
+#else
+using LLVMInlineAsmDiagHandlerTy = void*;
+#endif
+
 extern "C" void LLVMRustSetInlineAsmDiagnosticHandler(
-    LLVMContextRef C, LLVMContext::InlineAsmDiagHandlerTy H, void *CX) {
+    LLVMContextRef C, LLVMInlineAsmDiagHandlerTy H, void *CX) {
+  // Diagnostic handlers were unified in LLVM change 5de2d189e6ad, so starting
+  // with LLVM 13 this function is gone.
+#if LLVM_VERSION_LT(13, 0)
   unwrap(C)->setInlineAsmDiagnosticHandler(H, CX);
+#endif
 }
 
 extern "C" bool LLVMRustUnpackSMDiagnostic(LLVMSMDiagnosticRef DRef,

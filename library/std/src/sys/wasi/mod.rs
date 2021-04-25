@@ -42,8 +42,6 @@ pub mod pipe;
 pub mod process;
 #[path = "../unsupported/rwlock.rs"]
 pub mod rwlock;
-#[path = "../unsupported/stack_overflow.rs"]
-pub mod stack_overflow;
 pub mod stdio;
 pub mod thread;
 #[path = "../unsupported/thread_local_dtor.rs"]
@@ -78,6 +76,7 @@ pub fn decode_error_kind(errno: i32) -> std_io::ErrorKind {
         wasi::ERRNO_TIMEDOUT => TimedOut,
         wasi::ERRNO_EXIST => AlreadyExists,
         wasi::ERRNO_AGAIN => WouldBlock,
+        wasi::ERRNO_NOSYS => Unsupported,
         _ => Other,
     }
 }

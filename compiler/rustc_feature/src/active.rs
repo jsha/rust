@@ -255,9 +255,6 @@ declare_features! (
     // feature-group-start: actual feature gates
     // -------------------------------------------------------------------------
 
-    /// Allows defining identifiers beyond ASCII.
-    (active, non_ascii_idents, "1.0.0", Some(55467), None),
-
     /// Allows using `#[plugin_registrar]` on functions.
     (active, plugin_registrar, "1.0.0", Some(29597), None),
 
@@ -636,6 +633,9 @@ declare_features! (
     /// Allows associated types in inherent impls.
     (active, inherent_associated_types, "1.52.0", Some(8995), None),
 
+    // Allows setting the threshold for the `large_assignments` lint.
+    (active, large_assignments, "1.52.0", Some(83518), None),
+
     /// Allows `extern "C-unwind" fn` to enable unwinding across ABI boundaries.
     (active, c_unwind, "1.52.0", Some(74990), None),
 
@@ -644,6 +644,12 @@ declare_features! (
 
     /// Allows `extern "wasm" fn`
     (active, wasm_abi, "1.53.0", Some(83788), None),
+
+    /// Allows trait bounds in `const fn`.
+    (active, const_fn_trait_bound, "1.53.0", Some(57563), None),
+
+    /// Allows unsizing coercions in `const fn`.
+    (active, const_fn_unsize, "1.53.0", Some(64992), None),
 
     // -------------------------------------------------------------------------
     // feature-group-end: actual feature gates

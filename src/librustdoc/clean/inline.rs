@@ -6,7 +6,7 @@ use rustc_ast as ast;
 use rustc_data_structures::fx::FxHashSet;
 use rustc_hir as hir;
 use rustc_hir::def::{DefKind, Res};
-use rustc_hir::def_id::{DefId, CRATE_DEF_INDEX};
+use rustc_hir::def_id::DefId;
 use rustc_hir::Mutability;
 use rustc_metadata::creader::LoadedMacro;
 use rustc_middle::ty::{self, TyCtxt};
@@ -15,7 +15,7 @@ use rustc_span::hygiene::MacroKind;
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_span::Span;
 
-use crate::clean::{self, Attributes, GetDefId, ToSource, TypeKind};
+use crate::clean::{self, Attributes, GetDefId, ToSource};
 use crate::core::DocContext;
 use crate::formats::item_type::ItemType;
 
@@ -56,36 +56,36 @@ crate fn try_inline(
 
     let kind = match res {
         Res::Def(DefKind::Trait, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Trait);
+            record_extern_fqn(cx, did, ItemType::Trait);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::TraitItem(build_external_trait(cx, did))
         }
         Res::Def(DefKind::Fn, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Function);
+            record_extern_fqn(cx, did, ItemType::Function);
             clean::FunctionItem(build_external_function(cx, did))
         }
         Res::Def(DefKind::Struct, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Struct);
+            record_extern_fqn(cx, did, ItemType::Struct);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::StructItem(build_struct(cx, did))
         }
         Res::Def(DefKind::Union, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Union);
+            record_extern_fqn(cx, did, ItemType::Union);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::UnionItem(build_union(cx, did))
         }
         Res::Def(DefKind::TyAlias, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Typedef);
+            record_extern_fqn(cx, did, ItemType::Typedef);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::TypedefItem(build_type_alias(cx, did), false)
         }
         Res::Def(DefKind::Enum, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Enum);
+            record_extern_fqn(cx, did, ItemType::Enum);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::EnumItem(build_enum(cx, did))
         }
         Res::Def(DefKind::ForeignTy, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Foreign);
+            record_extern_fqn(cx, did, ItemType::ForeignType);
             build_impls(cx, Some(parent_module), did, attrs, &mut ret);
             clean::ForeignTypeItem
         }
@@ -95,24 +95,24 @@ crate fn try_inline(
         // their constructors.
         Res::Def(DefKind::Ctor(..), _) | Res::SelfCtor(..) => return Some(Vec::new()),
         Res::Def(DefKind::Mod, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Module);
+            record_extern_fqn(cx, did, ItemType::Module);
             clean::ModuleItem(build_module(cx, did, visited))
         }
         Res::Def(DefKind::Static, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Static);
+            record_extern_fqn(cx, did, ItemType::Static);
             clean::StaticItem(build_static(cx, did, cx.tcx.is_mutable_static(did)))
         }
         Res::Def(DefKind::Const, did) => {
-            record_extern_fqn(cx, did, clean::TypeKind::Const);
+            record_extern_fqn(cx, did, ItemType::Constant);
             clean::ConstantItem(build_const(cx, did))
         }
         Res::Def(DefKind::Macro(kind), did) => {
             let mac = build_macro(cx, did, name);
 
             let type_kind = match kind {
-                MacroKind::Bang => TypeKind::Macro,
-                MacroKind::Attr => TypeKind::Attr,
-                MacroKind::Derive => TypeKind::Derive,
+                MacroKind::Bang => ItemType::Macro,
+                MacroKind::Attr => ItemType::ProcAttribute,
+                MacroKind::Derive => ItemType::ProcDerive,
             };
             record_extern_fqn(cx, did, type_kind);
             mac
@@ -157,7 +157,7 @@ crate fn load_attrs<'hir>(cx: &DocContext<'hir>, did: DefId) -> Attrs<'hir> {
 ///
 /// These names are used later on by HTML rendering to generate things like
 /// source links back to the original item.
-crate fn record_extern_fqn(cx: &mut DocContext<'_>, did: DefId, kind: clean::TypeKind) {
+crate fn record_extern_fqn(cx: &mut DocContext<'_>, did: DefId, kind: ItemType) {
     let crate_name = cx.tcx.crate_name(did.krate).to_string();
 
     let relative = cx.tcx.def_path(did).data.into_iter().filter_map(|elem| {
@@ -165,7 +165,7 @@ crate fn record_extern_fqn(cx: &mut DocContext<'_>, did: DefId, kind: clean::Typ
         let s = elem.data.to_string();
         if !s.is_empty() { Some(s) } else { None }
     });
-    let fqn = if let clean::TypeKind::Macro = kind {
+    let fqn = if let ItemType::Macro = kind {
         // Check to see if it is a macro 2.0 or built-in macro
         if matches!(
             cx.enter_resolver(|r| r.cstore().load_macro_untracked(did, cx.sess())),
@@ -422,6 +422,7 @@ crate fn build_impl(
         did,
         None,
         clean::ImplItem(clean::Impl {
+            span: clean::types::rustc_span(did, cx.tcx),
             unsafety: hir::Unsafety::Normal,
             generics,
             provided_trait_methods: provided,
@@ -459,8 +460,7 @@ fn build_module(
                 items.push(clean::Item {
                     name: None,
                     attrs: box clean::Attributes::default(),
-                    span: clean::Span::dummy(),
-                    def_id: DefId::local(CRATE_DEF_INDEX),
+                    def_id: cx.next_def_id(did.krate),
                     visibility: clean::Public,
                     kind: box clean::ImportItem(clean::Import::new_simple(
                         item.ident.name,
@@ -487,7 +487,8 @@ fn build_module(
         }
     }
 
-    clean::Module { items, is_crate: false }
+    let span = clean::Span::from_rustc_span(cx.tcx.def_span(did));
+    clean::Module { items, span }
 }
 
 crate fn print_inlined_const(tcx: TyCtxt<'_>, did: DefId) -> String {

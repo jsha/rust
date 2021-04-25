@@ -233,6 +233,7 @@
 #![feature(assert_matches)]
 #![feature(associated_type_bounds)]
 #![feature(atomic_mut_ptr)]
+#![feature(bench_black_box)]
 #![feature(box_syntax)]
 #![feature(c_variadic)]
 #![feature(cfg_accessible)]
@@ -459,6 +460,7 @@ pub use core::pin;
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use core::ptr;
 #[stable(feature = "rust1", since = "1.0.0")]
+#[allow(deprecated, deprecated_in_future)]
 pub use core::raw;
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use core::result;

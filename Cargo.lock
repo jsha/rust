@@ -111,9 +111,15 @@ checksum = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
 
 [[package]]
 name = "arrayvec"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a2f58b0bb10c380af2b26e57212856b8c9a59e0925b4c20f4a174a49734eaf7"
 
 [[package]]
 name = "atty"
@@ -160,7 +166,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8fb2d74254a3a0b5cac33ac9f8ed0e44aa50378d9dbb2e5d83bd21ed1dc2c8a"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.5.2",
  "constant_time_eq",
 ]
 
@@ -1239,12 +1245,9 @@ checksum = "5f2a4a2034423744d2cc7ca2068453168dcdb82c438419e639a26bd87839c674"
 
 [[package]]
 name = "fst"
-version = "0.3.5"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "927fb434ff9f0115b215dc0efd2e4fbdd7448522a92a1aa37c77d6a2f8f1ebd6"
-dependencies = [
- "byteorder",
-]
+checksum = "d79238883cf0307100b90aba4a755d8051a3182305dfe7f649a1e9dc0517006f"
 
 [[package]]
 name = "fuchsia-zircon"
@@ -1744,18 +1747,18 @@ checksum = "dc6f3ad7b9d11a0c00842ff8de1b60ee58661048eb8049ed33c73594f359d7e6"
 
 [[package]]
 name = "jobserver"
-version = "0.1.21"
+version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c71313ebb9439f74b00d9d2dcec36440beaf57a6aa0623068441dd7cd81a7f2"
+checksum = "972f5ae5d1cb9c6ae417789196c803205313edde988685da5e3aae0827b9e7fd"
 dependencies = [
  "libc",
 ]
 
 [[package]]
 name = "json"
-version = "0.11.15"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92c245af8786f6ac35f95ca14feca9119e71339aaab41e878e7cdd655c97e9e5"
+checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
 
 [[package]]
 name = "jsondocck"
@@ -2165,7 +2168,7 @@ dependencies = [
  "parking_lot",
  "perf-event-open-sys",
  "rustc-hash",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -2324,7 +2327,7 @@ dependencies = [
  "rustc-workspace-hack",
  "rustc_version",
  "shell-escape",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -2548,7 +2551,7 @@ dependencies = [
  "instant",
  "libc",
  "redox_syscall 0.2.5",
- "smallvec 1.6.1",
+ "smallvec",
  "winapi 0.3.9",
 ]
 
@@ -3127,7 +3130,7 @@ dependencies = [
  "futures 0.3.12",
  "heck",
  "home",
- "itertools 0.8.2",
+ "itertools 0.9.0",
  "jsonrpc-core",
  "lazy_static",
  "log",
@@ -3162,14 +3165,14 @@ dependencies = [
 
 [[package]]
 name = "rls-analysis"
-version = "0.18.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "534032993e1b60e5db934eab2dde54da7afd1e46c3465fddb2b29eb47cb1ed3a"
+version = "0.18.2"
 dependencies = [
  "derive-new",
+ "env_logger 0.7.1",
  "fst",
- "itertools 0.8.2",
+ "itertools 0.9.0",
  "json",
+ "lazy_static",
  "log",
  "rls-data",
  "rls-span",
@@ -3269,7 +3272,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "259cca0e975ecb05fd289ace45280c30ff792efc04e856a7f18b7fc86a3cb610"
 dependencies = [
  "rustc-ap-rustc_data_structures",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -3285,7 +3288,7 @@ dependencies = [
  "rustc-ap-rustc_macros",
  "rustc-ap-rustc_serialize",
  "rustc-ap-rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3343,7 +3346,7 @@ version = "712.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cbfa7f82517a1b2efe7106c864c3f930b1da8aff07a27fd317af2f36522fd2e"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "bitflags",
  "cfg-if 0.1.10",
  "crossbeam-utils 0.7.2",
@@ -3360,7 +3363,7 @@ dependencies = [
  "rustc-hash",
  "rustc-rayon",
  "rustc-rayon-core",
- "smallvec 1.6.1",
+ "smallvec",
  "stable_deref_trait",
  "stacker",
  "tempfile",
@@ -3408,7 +3411,7 @@ dependencies = [
  "rustc-ap-rustc_serialize",
  "rustc-ap-rustc_session",
  "rustc-ap-rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3440,7 +3443,7 @@ version = "712.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f6f53afc4f7111c82295cb7ea3878f520bbac6a2c5a12e125b4ca9156498cff"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "rustc-ap-rustc_macros",
  "rustc-ap-rustc_serialize",
 ]
@@ -3496,7 +3499,7 @@ dependencies = [
  "rustc-ap-rustc_lexer",
  "rustc-ap-rustc_session",
  "rustc-ap-rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
  "unicode-normalization",
 ]
@@ -3508,7 +3511,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d33c710120953c0214f47a6caf42064d7e241003b4af36c98a6d6156e70335f1"
 dependencies = [
  "indexmap",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -3657,8 +3660,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
- "smallvec 0.6.14",
- "smallvec 1.6.1",
+ "smallvec",
  "syn",
  "url 2.1.1",
  "winapi 0.3.9",
@@ -3669,7 +3671,7 @@ name = "rustc_apfloat"
 version = "0.0.0"
 dependencies = [
  "bitflags",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -3677,7 +3679,7 @@ name = "rustc_arena"
 version = "0.0.0"
 dependencies = [
  "rustc_data_structures",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -3691,7 +3693,7 @@ dependencies = [
  "rustc_macros",
  "rustc_serialize",
  "rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3709,7 +3711,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3772,7 +3774,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3801,7 +3803,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "snap",
  "tracing",
 ]
@@ -3840,7 +3842,7 @@ dependencies = [
 name = "rustc_data_structures"
 version = "0.0.0"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.7.0",
  "bitflags",
  "cfg-if 0.1.10",
  "crossbeam-utils 0.7.2",
@@ -3858,7 +3860,7 @@ dependencies = [
  "rustc_index",
  "rustc_macros",
  "rustc_serialize",
- "smallvec 1.6.1",
+ "smallvec",
  "stable_deref_trait",
  "stacker",
  "tempfile",
@@ -3941,7 +3943,7 @@ dependencies = [
  "rustc_serialize",
  "rustc_session",
  "rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -3973,7 +3975,7 @@ dependencies = [
  "rustc_serialize",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4010,7 +4012,7 @@ dependencies = [
 name = "rustc_index"
 version = "0.0.0"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.7.0",
  "rustc_macros",
  "rustc_serialize",
 ]
@@ -4031,7 +4033,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4075,7 +4077,7 @@ dependencies = [
  "rustc_traits",
  "rustc_ty_utils",
  "rustc_typeck",
- "smallvec 1.6.1",
+ "smallvec",
  "tempfile",
  "tracing",
  "winapi 0.3.9",
@@ -4164,7 +4166,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "snap",
  "stable_deref_trait",
  "tracing",
@@ -4196,7 +4198,7 @@ dependencies = [
  "rustc_span",
  "rustc_target",
  "rustc_type_ir",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4227,7 +4229,7 @@ dependencies = [
  "rustc_span",
  "rustc_target",
  "rustc_trait_selection",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4250,7 +4252,7 @@ dependencies = [
  "rustc_span",
  "rustc_target",
  "rustc_trait_selection",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4267,7 +4269,7 @@ dependencies = [
  "rustc_lexer",
  "rustc_session",
  "rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
  "unicode-normalization",
 ]
@@ -4368,7 +4370,7 @@ dependencies = [
  "rustc_serialize",
  "rustc_session",
  "rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4392,7 +4394,7 @@ dependencies = [
  "rustc_middle",
  "rustc_session",
  "rustc_span",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4421,7 +4423,7 @@ version = "0.0.0"
 dependencies = [
  "indexmap",
  "rustc_macros",
- "smallvec 1.6.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -4518,7 +4520,7 @@ dependencies = [
  "rustc_session",
  "rustc_span",
  "rustc_target",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4538,7 +4540,7 @@ dependencies = [
  "rustc_middle",
  "rustc_span",
  "rustc_trait_selection",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4588,7 +4590,7 @@ dependencies = [
  "rustc_span",
  "rustc_target",
  "rustc_trait_selection",
- "smallvec 1.6.1",
+ "smallvec",
  "tracing",
 ]
 
@@ -4605,7 +4607,7 @@ dependencies = [
 name = "rustdoc"
 version = "0.0.0"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.7.0",
  "expect-test",
  "itertools 0.9.0",
  "minifier",
@@ -4615,7 +4617,7 @@ dependencies = [
  "rustdoc-json-types",
  "serde",
  "serde_json",
- "smallvec 1.6.1",
+ "smallvec",
  "tempfile",
  "tracing",
  "tracing-subscriber",
@@ -4960,15 +4962,6 @@ name = "slab"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
-
-[[package]]
-name = "smallvec"
-version = "0.6.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b97fcaeba89edba30f044a10c6a3cc39df9c3f17d7cd829dd1446cab35f890e0"
-dependencies = [
- "maybe-uninit",
-]
 
 [[package]]
 name = "smallvec"
@@ -5489,7 +5482,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sharded-slab",
- "smallvec 1.6.1",
+ "smallvec",
  "thread_local",
  "tracing",
  "tracing-core",

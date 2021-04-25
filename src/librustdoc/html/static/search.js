@@ -840,7 +840,7 @@ window.initSearch = function(rawSearchIndex) {
      * @param  {[string]} path   [The path of the result]
      * @param  {[string]} keys   [The keys to be used (["file", "open"])]
      * @param  {[object]} parent [The parent of the result]
-     * @return {[boolean]}       [Whether the result is valid or not]
+     * @return {boolean}       [Whether the result is valid or not]
      */
     function validateResult(name, path, keys, parent) {
         for (var i = 0, len = keys.length; i < len; ++i) {
@@ -900,7 +900,6 @@ window.initSearch = function(rawSearchIndex) {
             res[0].focus();
         }
     }
-
     function initSearchNav() {
         searchState.outputElement().addEventListener("keydown", function(e) {
             // up and down arrow select next/previous search result, or the

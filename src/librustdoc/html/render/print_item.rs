@@ -4,6 +4,7 @@ use rustc_data_structures::fx::FxHashMap;
 use rustc_hir as hir;
 use rustc_hir::def::CtorKind;
 use rustc_hir::def_id::DefId;
+use rustc_middle::dep_graph::DepContext;
 use rustc_middle::middle::stability;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::hygiene::MacroKind;
@@ -27,8 +28,8 @@ pub(super) fn print_item(cx: &Context<'_>, item: &clean::Item, buf: &mut Buffer)
     // Write the breadcrumb trail header for the top
     buf.write_str("<h1 class=\"fqn\"><span class=\"in-band\">");
     let name = match *item.kind {
-        clean::ModuleItem(ref m) => {
-            if m.is_crate {
+        clean::ModuleItem(_) => {
+            if item.is_crate() {
                 "Crate "
             } else {
                 "Module "
@@ -282,11 +283,40 @@ fn item_module(w: &mut Buffer, cx: &Context<'_>, item: &clean::Item, items: &[cl
             }
 
             clean::ImportItem(ref import) => {
+                let (stab, stab_tags) = if let Some(import_def_id) = import.source.did {
+                    let import_attrs = Box::new(clean::Attributes::from_ast(
+                        cx.tcx().sess().diagnostic(),
+                        cx.tcx().get_attrs(import_def_id),
+                        None,
+                    ));
+
+                    // Just need an item with the correct def_id and attrs
+                    let import_item = clean::Item {
+                        def_id: import_def_id,
+                        attrs: import_attrs,
+                        ..myitem.clone()
+                    };
+
+                    let stab = import_item.stability_class(cx.tcx());
+                    let stab_tags = Some(extra_info_tags(&import_item, item, cx.tcx()));
+                    (stab, stab_tags)
+                } else {
+                    (None, None)
+                };
+
+                let add = if stab.is_some() { " " } else { "" };
+
                 write!(
                     w,
-                    "<tr><td><code>{}{}</code></td></tr>",
-                    myitem.visibility.print_with_space(myitem.def_id, cx),
-                    import.print(cx),
+                    "<tr class=\"{stab}{add}import-item\">\
+                         <td><code>{vis}{imp}</code></td>\
+                         <td class=\"docblock-short\">{stab_tags}</td>\
+                     </tr>",
+                    stab = stab.unwrap_or_default(),
+                    add = add,
+                    vis = myitem.visibility.print_with_space(myitem.def_id, cx),
+                    imp = import.print(cx),
+                    stab_tags = stab_tags.unwrap_or_default(),
                 );
             }
 
@@ -320,7 +350,7 @@ fn item_module(w: &mut Buffer, cx: &Context<'_>, item: &clean::Item, items: &[cl
                     docs = MarkdownSummaryLine(&doc_value, &myitem.links(cx)).into_string(),
                     class = myitem.type_(),
                     add = add,
-                    stab = stab.unwrap_or_else(String::new),
+                    stab = stab.unwrap_or_default(),
                     unsafety_flag = unsafety_flag,
                     href = item_path(myitem.type_(), &myitem.name.unwrap().as_str()),
                     title = [full_path(cx, myitem), myitem.type_().to_string()]
@@ -933,6 +963,7 @@ fn item_enum(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, e: &clean::Enum
 
             use crate::clean::Variant;
             if let clean::VariantItem(Variant::Struct(ref s)) = *variant.kind {
+                toggle_open(w, "fields");
                 let variant_id = cx.derive_id(format!(
                     "{}.{}.fields",
                     ItemType::Variant,
@@ -966,6 +997,7 @@ fn item_enum(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, e: &clean::Enum
                     }
                 }
                 w.write_str("</div></div>");
+                toggle_close(w);
             }
             render_stability_since(w, variant, it, cx.tcx());
         }
@@ -981,7 +1013,7 @@ fn item_macro(w: &mut Buffer, cx: &Context<'_>, it: &clean::Item, t: &clean::Mac
             Some("macro"),
             None,
             None,
-            it.span.inner().edition(),
+            it.span(cx.tcx()).inner().edition(),
         );
     });
     document(w, cx, it, None)
