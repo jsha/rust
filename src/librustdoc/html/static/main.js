@@ -191,6 +191,7 @@ function hideThemeButtonState() {
         if (search === null || typeof search === 'undefined') {
             search = searchState.outputElement();
         }
+        searchState.focusedByTab = [null, null, null];
         addClass(main, "hidden");
         removeClass(search, "hidden");
         document.title = searchState.title;

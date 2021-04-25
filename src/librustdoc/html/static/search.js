@@ -899,49 +899,11 @@ window.initSearch = function(rawSearchIndex) {
     // was focused last time this tab was active.
     function focusSearchResult() {
         var target = searchState.focusedByTab[searchState.currentTab] ||
-          document.querySelectorAll(".search-results.active a").item(0);
+          document.querySelectorAll(".search-results.active a").item(0) ||
+          document.querySelectorAll("#titles > button").item(searchState.currentTab);
         if(target) {
             target.focus();
         }
-    }
-    function initSearchNav() {
-        searchState.outputElement().addEventListener("keydown", function(e) {
-            // We only handle unmodified keystrokes here. We don't want to interfere with,
-            // for instance, alt-left and alt-right for history navigation.
-            if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
-                return;
-            }
-            // up and down arrow select next/previous search result, or the
-            // search box if we're already at the top.
-            if (e.which === 38) { // up
-                var previous = document.activeElement.previousElementSibling;
-                if (previous) {
-                    previous.focus();
-                } else {
-                    searchState.focus();
-                }
-                e.preventDefault();
-            } else if (e.which === 40) { // down
-                var next = document.activeElement.nextElementSibling;
-                if (next) {
-                    next.focus();
-                }
-                e.preventDefault();
-            } else if (e.which === 37) { // left
-                tabLeft();
-                e.preventDefault();
-            } else if (e.which === 39) { // right
-                tabRight();
-                e.preventDefault();
-            }
-        });
-
-        searchState.input.addEventListener("keydown", function(e) {
-            if (e.which === 40) { // down
-                focusSearchResult();
-                e.preventDefault();
-            }
-        });
     }
 
     function buildHrefAndPath(item) {
@@ -1125,7 +1087,6 @@ window.initSearch = function(rawSearchIndex) {
 
         search.innerHTML = output;
         searchState.showResults(search);
-        initSearchNav();
         var elems = document.getElementById("titles").childNodes;
         elems[0].onclick = function() { printTab(0); };
         elems[1].onclick = function() { printTab(1); };
@@ -1402,6 +1363,47 @@ window.initSearch = function(rawSearchIndex) {
             setTimeout(search, 0);
         };
         searchState.input.onpaste = searchState.input.onchange;
+
+        searchState.outputElement().addEventListener("keydown", function(e) {
+            // We only handle unmodified keystrokes here. We don't want to interfere with,
+            // for instance, alt-left and alt-right for history navigation.
+            if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+                return;
+            }
+            // up and down arrow select next/previous search result, or the
+            // search box if we're already at the top.
+            if (e.which === 38) { // up
+                var previous = document.activeElement.previousElementSibling;
+                if (previous) {
+                    console.log("previousElementSibling", previous);
+                    previous.focus();
+                } else {
+                    searchState.focus();
+                }
+                e.preventDefault();
+            } else if (e.which === 40) { // down
+                var next = document.activeElement.nextElementSibling;
+                if (next) {
+                    console.log("nextElementSibling", next);
+                    next.focus();
+                }
+                e.preventDefault();
+            } else if (e.which === 37) { // left
+                tabLeft();
+                e.preventDefault();
+            } else if (e.which === 39) { // right
+                tabRight();
+                e.preventDefault();
+            }
+        });
+
+        searchState.input.addEventListener("keydown", function(e) {
+            if (e.which === 40) { // down
+                focusSearchResult();
+                e.preventDefault();
+            }
+        });
+
 
         var selectCrate = document.getElementById("crate-search");
         if (selectCrate) {
