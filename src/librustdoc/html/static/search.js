@@ -880,24 +880,28 @@ window.initSearch = function(rawSearchIndex) {
     }
 
     function tabLeft() {
+        searchState.focusedByTab[searchState.currentTab] = document.activeElement;
         if (searchState.currentTab > 0) {
             printTab(searchState.currentTab - 1);
         }
-        focusFirstSearchResult();
+        focusSearchResult();
     }
 
     function tabRight() {
+        searchState.focusedByTab[searchState.currentTab] = document.activeElement;
         if (searchState.currentTab < 2) {
             printTab(searchState.currentTab + 1);
         }
-        focusFirstSearchResult();
+        focusSearchResult();
     }
 
-    // focus the first search result on the active tab.
-    function focusFirstSearchResult() {
-        var res = document.querySelectorAll(".search-results.active a");
-        if (res.length > 0) {
-            res[0].focus();
+    // focus the first search result on the active tab, or the result that
+    // was focused last time this tab was active.
+    function focusSearchResult() {
+        var target = searchState.focusedByTab[searchState.currentTab] ||
+          document.querySelectorAll(".search-results.active a").item(0);
+        if(target) {
+            target.focus();
         }
     }
     function initSearchNav() {
@@ -934,7 +938,7 @@ window.initSearch = function(rawSearchIndex) {
 
         searchState.input.addEventListener("keydown", function(e) {
             if (e.which === 40) { // down
-                focusFirstSearchResult();
+                focusSearchResult();
                 e.preventDefault();
             }
         });

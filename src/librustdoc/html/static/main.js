@@ -170,6 +170,9 @@ function hideThemeButtonState() {
       // 1 for "In Parameters"
       // 2 for "In Return Types"
       currentTab: 0,
+      // To save state when switching between result tabs. Going to another
+      // tab and back preserves the element that was focused.
+      focusedByTab: [null, null, null],
       clearInputTimeout: function() {
         if (searchState.timeout !== null) {
             clearTimeout(searchState.timeout);
@@ -179,7 +182,6 @@ function hideThemeButtonState() {
       // Sets the focus on the search bar at the top of the page
       focus: function() {
           searchState.input.focus();
-          searchState.input.scrollIntoView();
       },
       // Removes the focus from the search bar.
       defocus: function() {
