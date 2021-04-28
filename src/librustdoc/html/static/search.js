@@ -1364,6 +1364,7 @@ window.initSearch = function(rawSearchIndex) {
         };
         searchState.input.onpaste = searchState.input.onchange;
 
+        var sidebar = document.querySelector("nav.sidebar");
         searchState.outputElement().addEventListener("keydown", function(e) {
             // We only handle unmodified keystrokes here. We don't want to interfere with,
             // for instance, alt-left and alt-right for history navigation.
@@ -1385,6 +1386,12 @@ window.initSearch = function(rawSearchIndex) {
                 var next = document.activeElement.nextElementSibling;
                 if (next) {
                     next.focus();
+                    // Scroll ahead if we are at the bottom of a page to prevent overlapping
+                    var sidebar_rect = sidebar.getBoundingClientRect();
+                    var next_rect = next.getBoundingClientRect();
+                    if (sidebar_rect.height < next_rect.bottom + next_rect.height) {
+                        window.scrollTo(window.screenX, window.scrollY + next_rect.height);
+                    }
                 }
                 e.preventDefault();
             } else if (e.which === 37) { // left
