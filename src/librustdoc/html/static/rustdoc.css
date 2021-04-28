@@ -1198,6 +1198,11 @@ pre.rust {
 .search-failed {
 	text-align: center;
 	margin-top: 20px;
+	display: none;
+}
+
+.search-failed.active {
+	display: block;
 }
 
 .search-failed > ul {

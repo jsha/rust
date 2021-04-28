@@ -1445,7 +1445,7 @@ function hideThemeButtonState() {
             ["T", "Focus the theme picker menu"],
             ["↑", "Move up in search results"],
             ["↓", "Move down in search results"],
-            ["ctrl + ↑ / ↓", "Switch result tab"],
+            ["← / →", "Switch result tab (when results focused)"],
             ["&#9166;", "Go to active search result"],
             ["+", "Expand all sections"],
             ["-", "Collapse all sections"],
