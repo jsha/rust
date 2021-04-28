@@ -1376,7 +1376,6 @@ window.initSearch = function(rawSearchIndex) {
             if (e.which === 38) { // up
                 var previous = document.activeElement.previousElementSibling;
                 if (previous) {
-                    console.log("previousElementSibling", previous);
                     previous.focus();
                 } else {
                     searchState.focus();
