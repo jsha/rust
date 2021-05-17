@@ -594,7 +594,7 @@ h4 > code, h3 > code, .invisible > code {
 }
 
 .content .impl-items .docblock, .content .impl-items .item-info {
-	margin-bottom: .6em;
+	margin-bottom: 1em;
 }
 
 .content .impl-items > .item-info {
