@@ -562,33 +562,33 @@ function hideThemeButtonState() {
     }());
 
     function addSidebarCrates(crates) {
-        // Draw a convenient sidebar of known crates if we have a listing
-        if (window.rootPath === "../" || window.rootPath === "./") {
-            var sidebar = document.getElementsByClassName("sidebar-elems")[0];
-            if (sidebar) {
-                var div = document.createElement("div");
-                div.className = "block crate";
-                div.innerHTML = "<h3>Crates</h3>";
-                var ul = document.createElement("ul");
-                div.appendChild(ul);
-
-                for (var i = 0; i < crates.length; ++i) {
-                    var klass = "crate";
-                    if (window.rootPath !== "./" && crates[i] === window.currentCrate) {
-                        klass += " current";
-                    }
-                    var link = document.createElement("a");
-                    link.href = window.rootPath + crates[i] + "/index.html";
-                    link.className = klass;
-                    link.textContent = crates[i];
-
-                    var li = document.createElement("li");
-                    li.appendChild(link);
-                    ul.appendChild(li);
-                }
-                sidebar.appendChild(div);
-            }
+        // On crate pages, render a list of sibling crates.
+        var loc = document.getElementsByClassName("location");
+        var sidebar = document.getElementsByClassName("sidebar-elems")[0];
+        if (!sidebar || loc.length < 1 || !loc[0].textContent.match(/^Crate/)) {
+            return;
         }
+        var div = document.createElement("div");
+        div.className = "block crate";
+        div.innerHTML = "<h3>Crates</h3>";
+        var ul = document.createElement("ul");
+        div.appendChild(ul);
+
+        for (var i = 0; i < crates.length; ++i) {
+            var klass = "crate";
+            if (window.rootPath !== "./" && crates[i] === window.currentCrate) {
+                klass += " current";
+            }
+            var link = document.createElement("a");
+            link.href = window.rootPath + crates[i] + "/index.html";
+            link.className = klass;
+            link.textContent = crates[i];
+
+            var li = document.createElement("li");
+            li.appendChild(link);
+            ul.appendChild(li);
+        }
+        sidebar.appendChild(div);
     }
 
     // delayed sidebar rendering.
@@ -653,9 +653,6 @@ function hideThemeButtonState() {
         block("foreigntype", "Foreign Types");
         block("keyword", "Keywords");
         block("traitalias", "Trait Aliases");
-
-        // `crates{version}.js` should always be loaded before this script, so we can use it safely.
-        addSidebarCrates(window.ALL_CRATES);
     };
 
     window.register_implementors = function(imp) {
@@ -961,6 +958,9 @@ function hideThemeButtonState() {
     onHashChange(null);
     window.addEventListener("hashchange", onHashChange);
     searchState.setup();
+
+    // `crates{version}.js` should always be loaded before this script, so we can use it safely.
+    addSidebarCrates(window.ALL_CRATES);
 }());
 
 (function () {
