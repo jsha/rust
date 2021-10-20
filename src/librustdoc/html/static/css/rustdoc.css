@@ -1097,20 +1097,32 @@ a.test-arrow:hover{
 	margin-right: 5px;
 }
 
-.sub-variant, .sub-variant > h3 {
+h3.variant {
+	font-size: 19px;
+	margin-bottom: 0;
+	border-bottom: none;
+}
+
+.sub-variant h4 {
+	font-size: 17px;
+	font-weight: 400;
+	border-bottom: none;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.sub-variant {
+	margin-left: 24px;
+	margin-bottom: 10px;
+}
+
+.sub-variant {
 	margin-top: 0px !important;
 	padding-top: 1px;
 }
 
-#main .sub-variant > h3 {
-	font-size: 15px;
-	margin-left: 25px;
-	margin-bottom: 5px;
-}
-
-.sub-variant > div {
+.sub-variant > span {
 	margin-left: 20px;
-	margin-bottom: 10px;
 }
 
 .sub-variant > div > span {
