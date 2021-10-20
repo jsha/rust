@@ -416,13 +416,20 @@ nav.sub {
 	padding: 0;
 }
 
-.sidebar-links {
-	margin-bottom: 15px;
+.sidebar-links h4 {
+	border-bottom: none;
+	font-weight: 400;
+	margin: 10px 0 0 0;
 }
 
-.sidebar-links > a {
+.sidebar-links h4 a {
+	padding-left: 0;
+	padding-bottom: 0;
+}
+
+.sidebar-links {
+	margin-bottom: 15px;
 	padding-left: 10px;
-	width: 100%;
 }
 
 .sidebar-menu {
