@@ -1946,10 +1946,8 @@ fn sidebar_assoc_items(cx: &Context<'_>, out: &mut Buffer, it: &clean::Item) {
                 }
                 out.push_str("</div>");
             }
-            let inherent_impls = v
-                .iter()
-                .filter(|i| i.inner_impl().trait_.is_none())
-                .collect::<Vec<_>>();
+            let inherent_impls =
+                v.iter().filter(|i| i.inner_impl().trait_.is_none()).collect::<Vec<_>>();
             if !inherent_impls.is_empty() {
                 out.push_str(
                     "<h3 class=\"sidebar-title\"><a href=\"#implementations\">Methods</a></h3>\
@@ -1957,16 +1955,22 @@ fn sidebar_assoc_items(cx: &Context<'_>, out: &mut Buffer, it: &clean::Item) {
                 );
                 let multiple_impls = inherent_impls.len() > 1;
                 for (i, inherent_impl) in inherent_impls.iter().enumerate() {
-                    let anchor = if i == 0 {
-                        "impl".into()
-                    } else {
-                        format!("impl-{}", i)
-                    };
+                    let anchor = if i == 0 { "impl".into() } else { format!("impl-{}", i) };
                     if multiple_impls {
-                        write!(out, "<h4 class=\"sidebar-impl\"><a href=\"#{}\">Impl {}</a></h4>",
-                            anchor, i+1);
+                        write!(
+                            out,
+                            "<h4 class=\"sidebar-impl\"><a href=\"#{}\">Impl {}</a></h4>",
+                            anchor,
+                            i + 1
+                        );
                     }
-                    let mut methods = get_methods(inherent_impl.inner_impl(), false, used_links_bor, false, cx.tcx());
+                    let mut methods = get_methods(
+                        inherent_impl.inner_impl(),
+                        false,
+                        used_links_bor,
+                        false,
+                        cx.tcx(),
+                    );
                     // We want links' order to be reproducible so we don't use unstable sort.
                     methods.sort();
 
