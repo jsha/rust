@@ -64,7 +64,6 @@ use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 
 use crate::clean::{self, ItemId, RenderedLink, SelfTy};
-use crate::docfs::PathError;
 use crate::error::Error;
 use crate::formats::cache::Cache;
 use crate::formats::item_type::ItemType;
@@ -78,7 +77,6 @@ use crate::html::highlight;
 use crate::html::markdown::{HeadingOffset, Markdown, MarkdownHtml, MarkdownSummaryLine};
 use crate::html::sources;
 use crate::scrape_examples::{CallData, CallLocation};
-use crate::try_none;
 
 /// A pair of name and its optional document.
 crate type NameDoc = (String, Option<String>);
@@ -353,7 +351,7 @@ enum Setting {
         js_data_name: &'static str,
         description: &'static str,
         default_value: &'static str,
-        options: Vec<(String, String)>,
+        options: Vec<String>,
     },
 }
 
@@ -393,10 +391,9 @@ impl Setting {
                 options
                     .iter()
                     .map(|opt| format!(
-                        "<option value=\"{}\" {}>{}</option>",
-                        opt.0,
-                        if opt.0 == default_value { "selected" } else { "" },
-                        opt.1,
+                        "<option value=\"{name}\" {}>{name}</option>",
+                        if opt == default_value { "selected" } else { "" },
+                        name = opt,
                     ))
                     .collect::<String>(),
                 root_path,
@@ -421,18 +418,7 @@ impl<T: Into<Setting>> From<(&'static str, Vec<T>)> for Setting {
     }
 }
 
-fn settings(root_path: &str, suffix: &str, themes: &[StylePath]) -> Result<String, Error> {
-    let theme_names: Vec<(String, String)> = themes
-        .iter()
-        .map(|entry| {
-            let theme =
-                try_none!(try_none!(entry.path.file_stem(), &entry.path).to_str(), &entry.path)
-                    .to_string();
-
-            Ok((theme.clone(), theme))
-        })
-        .collect::<Result<_, Error>>()?;
-
+fn settings(root_path: &str, suffix: &str, theme_names: Vec<String>) -> Result<String, Error> {
     // (id, explanation, default value)
     let settings: &[Setting] = &[
         (
