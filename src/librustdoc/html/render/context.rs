@@ -34,7 +34,7 @@ use crate::html::format::Buffer;
 use crate::html::markdown::{self, plain_text_summary, ErrorCodes, IdMap};
 use crate::html::{layout, sources};
 use crate::scrape_examples::AllCallLocations;
-use crate::{try_err};
+use crate::try_err;
 
 /// Major driving force in all rustdoc rendering. This contains information
 /// about where in the tree-like hierarchy rendering is occurring and controls
@@ -504,9 +504,9 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
         // by the browser as the theme stylesheet. The theme system (hackily) works by
         // changing the href to this stylesheet. All other themes are disabled to
         // prevent rule conflicts
-        scx.style_files.push(StylePath { path: PathBuf::from("light.css"), disabled: false });
-        scx.style_files.push(StylePath { path: PathBuf::from("dark.css"), disabled: true });
-        scx.style_files.push(StylePath { path: PathBuf::from("ayu.css"), disabled: true });
+        scx.style_files.push(StylePath { path: PathBuf::from("light.css") });
+        scx.style_files.push(StylePath { path: PathBuf::from("dark.css") });
+        scx.style_files.push(StylePath { path: PathBuf::from("ayu.css") });
 
         let dst = output;
         scx.ensure_dir(&dst)?;

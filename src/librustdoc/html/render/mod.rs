@@ -172,12 +172,10 @@ impl Serialize for TypeWithKind {
 crate struct StylePath {
     /// The path to the theme
     crate path: PathBuf,
-    /// What the `disabled` attribute should be set to in the HTML tag
-    crate disabled: bool,
 }
 
 impl StylePath {
-    fn basename(&self) -> Result<String, Error> {
+    pub fn basename(&self) -> Result<String, Error> {
         Ok(try_none!(try_none!(self.path.file_stem(), &self.path).to_str(), &self.path).to_string())
     }
 }
