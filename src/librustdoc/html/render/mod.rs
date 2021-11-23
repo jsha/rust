@@ -469,10 +469,11 @@ fn settings(root_path: &str, suffix: &str, themes: &[StylePath]) -> Result<Strin
             <span class=\"in-band\">Rustdoc settings</span>\
         </h1>\
         <div class=\"settings\">{}</div>\
-        <script src=\"{}settings{}.js\"></script>",
+        <link rel=\"stylesheet\" href=\"{root_path}settings{suffix}.css\">\
+        <script src=\"{root_path}settings{suffix}.js\"></script>",
         settings.iter().map(|s| s.display(root_path, suffix)).collect::<String>(),
-        root_path,
-        suffix
+        root_path = root_path,
+        suffix = suffix
     ))
 }
 

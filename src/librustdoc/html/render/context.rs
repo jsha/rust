@@ -596,9 +596,7 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
         page.description = "Settings of Rustdoc";
         page.root_path = "./";
 
-        let mut style_files = self.shared.style_files.clone();
         let sidebar = "<h2 class=\"location\">Settings</h2><div class=\"sidebar-elems\"></div>";
-        style_files.push(StylePath { path: PathBuf::from("settings.css"), disabled: false });
         let v = layout::render(
             &self.shared.templates,
             &self.shared.layout,
@@ -609,7 +607,7 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
                 &self.shared.resource_suffix,
                 &self.shared.style_files,
             )?,
-            &style_files,
+            &self.shared.style_files,
         );
         self.shared.fs.write(settings_file, v)?;
         if let Some(ref redirections) = self.shared.redirections {
