@@ -34,7 +34,7 @@ use crate::html::format::Buffer;
 use crate::html::markdown::{self, plain_text_summary, ErrorCodes, IdMap};
 use crate::html::{layout, sources};
 use crate::scrape_examples::AllCallLocations;
-use crate::{try_err, try_none};
+use crate::{try_err};
 
 /// Major driving force in all rustdoc rendering. This contains information
 /// about where in the tree-like hierarchy rendering is occurring and controls
@@ -601,10 +601,7 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
             .shared
             .style_files
             .iter()
-            .map(|entry| {
-                Ok(try_none!(try_none!(entry.path.file_stem(), &entry.path).to_str(), &entry.path)
-                    .to_string())
-            })
+            .map(StylePath::basename)
             .collect::<Result<_, Error>>()?;
         let v = layout::render(
             &self.shared.templates,

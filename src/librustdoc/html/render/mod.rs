@@ -77,6 +77,7 @@ use crate::html::highlight;
 use crate::html::markdown::{HeadingOffset, Markdown, MarkdownHtml, MarkdownSummaryLine};
 use crate::html::sources;
 use crate::scrape_examples::{CallData, CallLocation};
+use crate::try_none;
 
 /// A pair of name and its optional document.
 crate type NameDoc = (String, Option<String>);
@@ -173,6 +174,12 @@ crate struct StylePath {
     crate path: PathBuf,
     /// What the `disabled` attribute should be set to in the HTML tag
     crate disabled: bool,
+}
+
+impl StylePath {
+    fn basename(&self) -> Result<String, Error> {
+        Ok(try_none!(try_none!(self.path.file_stem(), &self.path).to_str(), &self.path).to_string())
+    }
 }
 
 fn write_srclink(cx: &Context<'_>, item: &clean::Item, buf: &mut Buffer) {
