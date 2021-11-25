@@ -1,6 +1,4 @@
 var darkThemes = ["dark", "ayu"];
-window.currentTheme = document.getElementById("themeStyle");
-window.mainTheme = document.getElementById("mainThemeStyle");
 
 var settingsDataset = (function () {
     var settingsElement = document.getElementById("default-settings");
@@ -29,10 +27,6 @@ function getSettingValue(settingName) {
     }
     return null;
 }
-
-var localStoredTheme = getSettingValue("theme");
-
-var savedHref = [];
 
 // eslint-disable-next-line no-unused-vars
 function hasClass(elem, className) {
@@ -104,35 +98,15 @@ function getCurrentValue(name) {
     }
 }
 
-function switchTheme(styleElem, mainStyleElem, newTheme, saveTheme) {
-    var newHref = mainStyleElem.href.replace(
-        /\/rustdoc([^/]*)\.css/, "/" + newTheme + "$1" + ".css");
+function themeURL(themeName) {
+    var mainThemeURL = document.getElementById("mainThemeStyle").href;
+    return mainThemeURL.replace(/rustdoc([^/]*)\.css/, themeName + "$1.css");
+}
 
-    // If this new value comes from a system setting or from the previously
-    // saved theme, no need to save it.
-    if (saveTheme) {
-        updateLocalStorage("rustdoc-theme", newTheme);
-    }
-
-    if (styleElem.href === newHref) {
-        return;
-    }
-
-    var found = false;
-    if (savedHref.length === 0) {
-        onEachLazy(document.getElementsByTagName("link"), function(el) {
-            savedHref.push(el.href);
-        });
-    }
-    onEach(savedHref, function(el) {
-        if (el === newHref) {
-            found = true;
-            return true;
-        }
-    });
-    if (found) {
-        styleElem.href = newHref;
-    }
+function useOneTheme(value) {
+    updateLocalStorage("rustdoc-theme", value);
+    useSystemTheme(false);
+    applyThemeUpdate();
 }
 
 // This function is called from "main.js".
@@ -151,68 +125,105 @@ function useSystemTheme(value) {
     }
 }
 
-var updateSystemTheme = (function() {
+// Returns "light" or "dark" depending on the user's browser preferences
+// (that is, independent of any rustdoc settings).
+function getSystemTheme() {
     if (!window.matchMedia) {
-        // fallback to the CSS computed value
-        return function() {
-            var cssTheme = getComputedStyle(document.documentElement)
-                .getPropertyValue('content');
+      // In rustdoc.css we have:
+      // @media (prefers-color-scheme: light) {
+      //     html {
+      //         content: "light";
+      //     }
+      // }
+      // @media (prefers-color-scheme: dark) {
+      //     html {
+      //         content: "dark";
+      //     }
+      // }
 
-            switchTheme(
-                window.currentTheme,
-                window.mainTheme,
-                JSON.parse(cssTheme) || "light",
-                true
-            );
-        };
+      return getComputedStyle(document.documentElement)
+          .getPropertyValue('content') || "light";
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+    } else {
+        return "light";
     }
+}
 
-    // only listen to (prefers-color-scheme: dark) because light is the default
-    var mql = window.matchMedia("(prefers-color-scheme: dark)");
+// If there is a specific theme selected, or if "Use System Theme" is selected
+// and there is a specific theme for the current light or dark mode, return
+// the appropriate theme's name. Otherwise, return null.
+function getThemeOverride() {
+    if (getSettingValue("use-system-theme") !== "false") {
+        var lightOverride = getSettingValue("preferred-light-theme");
+        var darkOverride = getSettingValue("preferred-dark-theme");
 
-    function handlePreferenceChange(mql) {
-        // maybe the user has disabled the setting in the meantime!
-        if (getSettingValue("use-system-theme") !== "false") {
-            var lightTheme = getSettingValue("preferred-light-theme") || "light";
-            var darkTheme = getSettingValue("preferred-dark-theme") || "dark";
-
-            if (mql.matches) {
-                // prefers a dark theme
-                switchTheme(window.currentTheme, window.mainTheme, darkTheme, true);
-            } else {
-                // prefers a light theme, or has no preference
-                switchTheme(window.currentTheme, window.mainTheme, lightTheme, true);
-            }
-
-            // note: we save the theme so that it doesn't suddenly change when
-            // the user disables "use-system-theme" and reloads the page or
-            // navigates to another page
+        var preferred = getSystemTheme();
+        if (preferred == "light" && lightOverride && lightOverride != "light") {
+            console.log("lightoverride ", lightOverride);
+            return lightOverride;
+        } else if (preferred == "dark" && darkOverride && darkOverride != "dark") {
+            console.log("darkoverride ", darkOverride)
+            return darkOverride;
+        } else {
+            console.log("use default");
+            return null;
         }
+    } else {
+        console.log("getsettingvalue ", getSettingValue("theme"));
+        return getSettingValue("theme") || null;
     }
+}
 
-    mql.addListener(handlePreferenceChange);
+const nonDefaultThemeID = "nonDefaultThemeStyle";
 
-    return function() {
-        handlePreferenceChange(mql);
-    };
-})();
+function applyThemeUpdate() {
+    var lightOverride = getSettingValue("preferred-light-theme");
+    var darkOverride = getSettingValue("preferred-dark-theme");
+    var allOverride = getSettingValue("theme");
+    if (allOverride) {
+        document.getElementById(nonDefaultThemeID).href = themeURL(allOverride);
+    } else {
+        if (lightOverride) {
+            document.getElementById("lightThemeStyle").href = themeURL(lightOverride);
+        }
+        if (darkOverride) {
+            document.getElementById("darkThemeStyle").href = themeURL(darkOverride);
+        }
+        document.getElementById(nonDefaultThemeID).href = "";
+    }
+}
 
-if (getSettingValue("use-system-theme") !== "false" && window.matchMedia) {
+function updatePreferredDarkTheme() {
     // update the preferred dark theme if the user is already using a dark theme
     // See https://github.com/rust-lang/rust/pull/77809#issuecomment-707875732
+    var localStoredTheme = getSettingValue("theme");
     if (getSettingValue("use-system-theme") === null
         && getSettingValue("preferred-dark-theme") === null
         && darkThemes.indexOf(localStoredTheme) >= 0) {
         updateLocalStorage("rustdoc-preferred-dark-theme", localStoredTheme);
     }
+}
 
-    // call the function to initialize the theme at least once!
-    updateSystemTheme();
-} else {
-    switchTheme(
-        window.currentTheme,
-        window.mainTheme,
-        getSettingValue("theme") || "light",
-        false
-    );
+// If there's a theme override that's not covered by one of the default
+// dark / light themes, we write it to the document head. We use
+// document.write rather than appendChild intentionally. Stylesheets added
+// with document.write are render-blocking, while those added with appendChild
+// are not. We want render blocking behavior to avoid a flash of unstyled
+// content.
+function applyThemeOverride() {
+    var override = getThemeOverride();
+    if (override) {
+        document.write('<link rel="stylesheet" type="text/css" id="' + nonDefaultThemeID +
+           '" href="' + themeURL(override) + '">');
+    } else {
+        document.write('<link rel="stylesheet" type="text/css" id="' + nonDefaultThemeID + '">');
+    }
+}
+
+updatePreferredDarkTheme();
+applyThemeOverride();
+if (window.matchMedia) {
+    var mql = window.matchMedia("(prefers-color-scheme: dark)");
+    mql.addEventListener('change', applyThemeUpdate);
 }

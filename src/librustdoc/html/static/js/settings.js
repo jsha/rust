@@ -1,5 +1,5 @@
 // Local js definitions:
-/* global getSettingValue, getVirtualKey, onEachLazy, updateLocalStorage, updateSystemTheme */
+/* global getSettingValue, getVirtualKey, onEachLazy, updateLocalStorage, applyThemeUpdate */
 
 (function () {
     function changeSetting(settingName, value) {
@@ -9,7 +9,7 @@
             case "preferred-dark-theme":
             case "preferred-light-theme":
             case "use-system-theme":
-                updateSystemTheme();
+                applyThemeUpdate();
                 break;
         }
     }

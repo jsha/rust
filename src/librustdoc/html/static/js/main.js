@@ -1,7 +1,7 @@
 // Local js definitions:
 /* global addClass, getSettingValue, hasClass, searchState */
 /* global onEach, onEachLazy, removeClass */
-/* global switchTheme, useSystemTheme */
+/* global useSystemTheme */
 
 if (!String.prototype.startsWith) {
     String.prototype.startsWith = function(searchString, position) {
@@ -60,6 +60,7 @@ function resourcePath(basename, extension) {
     window.currentCrate = getVar("current-crate");
     window.searchJS =  resourcePath("search", ".js");
     window.searchIndexJS = resourcePath("search-index", ".js");
+    window.availableThemes = getVar("themes").split(",");
     var sidebarVars = document.getElementById("sidebar-vars");
     if (sidebarVars) {
         window.sidebarCurrent = {
@@ -130,7 +131,6 @@ function hideThemeButtonState() {
 (function () {
     var themeChoices = getThemesElement();
     var themePicker = getThemePickerElement();
-    var availableThemes = getVar("themes").split(",");
 
     function switchThemeButtonState() {
         if (themeChoices.style.display === "block") {
@@ -155,12 +155,12 @@ function hideThemeButtonState() {
 
     themePicker.onclick = switchThemeButtonState;
     themePicker.onblur = handleThemeButtonsBlur;
-    availableThemes.forEach(function(item) {
+    window.availableThemes.forEach(function(item) {
         var but = document.createElement("button");
         but.textContent = item;
         but.onclick = function() {
-            switchTheme(window.currentTheme, window.mainTheme, item, true);
-            useSystemTheme(false);
+            useOneTheme(item);
+            applyThemeUpdate();
         };
         but.onblur = handleThemeButtonsBlur;
         themeChoices.appendChild(but);
