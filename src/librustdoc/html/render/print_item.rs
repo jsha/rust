@@ -1467,7 +1467,7 @@ fn render_stability_since(
         item.const_stability(tcx),
         containing_item.stable_since(tcx),
         containing_item.const_stable_since(tcx),
-    )
+    );
 }
 
 fn compare_impl<'a, 'b>(lhs: &'a &&Impl, rhs: &'b &&Impl, cx: &Context<'_>) -> Ordering {

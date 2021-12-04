@@ -182,7 +182,7 @@ impl StylePath {
 
 fn write_srclink(cx: &Context<'_>, item: &clean::Item, buf: &mut Buffer) {
     if let Some(l) = cx.src_href(item) {
-        write!(buf, "<a class=\"srclink\" href=\"{}\" title=\"goto source code\">[src]</a>", l)
+        write!(buf, "<a class=\"srclink\" href=\"{}\" title=\"goto source code\">source</a>", l)
     }
 }
 
@@ -312,15 +312,15 @@ impl AllTypes {
         f.write_str(
             "<h1 class=\"fqn\">\
                  <span class=\"in-band\">List of all items</span>\
-                 <span class=\"out-of-band\">\
-                     <span id=\"render-detail\">\
-                         <a id=\"toggle-all-docs\" href=\"javascript:void(0)\" \
-                            title=\"collapse all docs\">\
-                             [<span class=\"inner\">&#x2212;</span>]\
-                         </a>\
-                     </span>
-                 </span>
-             </h1>",
+             </h1>\
+             <span class=\"out-of-band\">\
+                <span id=\"render-detail\">\
+                    <a id=\"toggle-all-docs\" href=\"javascript:void(0)\" \
+                    title=\"collapse all docs\">\
+                        collapse\
+                    </a>\
+                </span>
+             </span>",
         );
         // Note: print_entries does not escape the title, because we know the current set of titles
         // doesn't require escaping.
@@ -807,7 +807,7 @@ fn render_stability_since_raw(
     const_stability: Option<ConstStability>,
     containing_ver: Option<Symbol>,
     containing_const_ver: Option<Symbol>,
-) {
+) -> bool {
     let ver = ver.filter(|inner| !inner.is_empty());
 
     match (ver, const_stability) {
@@ -817,7 +817,7 @@ fn render_stability_since_raw(
         {
             write!(
                 w,
-                "<span class=\"since\" title=\"Stable since Rust version {0}, const since {1}\">{0} (const: {1})</span>",
+                "<span class=\"since\" title=\"Stable since Rust version {0}, const since {1}\">stable since {0} · const since {1}</span>",
                 v, since
             );
         }
@@ -828,7 +828,7 @@ fn render_stability_since_raw(
         ) => {
             write!(
                 w,
-                "<span class=\"since\" title=\"Stable since Rust version {0}, const unstable\">{0} (const: ",
+                "<span class=\"since\" title=\"Stable since Rust version {0}, const unstable\">stable since {0} · const: ",
                 v
             );
             if let Some(n) = issue {
@@ -840,18 +840,19 @@ fn render_stability_since_raw(
             } else {
                 write!(w, "unstable");
             }
-            write!(w, ")</span>");
+            write!(w, "</span>");
         }
         // stable
         (Some(v), _) if ver != containing_ver => {
             write!(
                 w,
-                "<span class=\"since\" title=\"Stable since Rust version {0}\">{0}</span>",
+                "<span class=\"since\" title=\"Stable since Rust version {0}\">stable since {0}</span>",
                 v
             );
         }
-        _ => {}
+        _ => return false,
     }
+    true
 }
 
 fn render_assoc_item(
@@ -1658,13 +1659,16 @@ fn render_rightside(
     };
 
     write!(w, "<div class=\"rightside\">");
-    render_stability_since_raw(
+    let has_stability = render_stability_since_raw(
         w,
         item.stable_since(tcx),
         const_stability,
         containing_item.stable_since(tcx),
         const_stable_since,
     );
+    if has_stability {
+        w.write_str(" · ");
+    }
 
     write_srclink(cx, item, w);
     w.write_str("</div>");
