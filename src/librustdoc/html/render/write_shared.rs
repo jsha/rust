@@ -286,7 +286,6 @@ pub(super) fn write_shared(
             &options.emit,
         )?;
     }
-    write_minify("normalize.css", static_files::NORMALIZE_CSS, cx, options)?;
     for (name, contents) in &*FILES_UNVERSIONED {
         cx.write_shared(SharedResource::Unversioned { name }, contents, &options.emit)?;
     }

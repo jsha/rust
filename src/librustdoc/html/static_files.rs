@@ -16,10 +16,6 @@ crate static SETTINGS_CSS: &str = include_str!("static/css/settings.css");
 /// The file contents of the `noscript.css` file, used in case JS isn't supported or is disabled.
 crate static NOSCRIPT_CSS: &str = include_str!("static/css/noscript.css");
 
-/// The file contents of `normalize.css`, included to even out standard elements between browser
-/// implementations.
-crate static NORMALIZE_CSS: &str = include_str!("static/css/normalize.css");
-
 /// The file contents of `main.js`, which contains the core JavaScript used on documentation pages,
 /// including search behavior and docblock folding, among others.
 crate static MAIN_JS: &str = include_str!("static/js/main.js");
