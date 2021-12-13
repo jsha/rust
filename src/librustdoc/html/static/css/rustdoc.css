@@ -1155,11 +1155,6 @@ h2.small-section-header > .anchor {
 	background-position: calc(100% - 1px) 56%;
 	background-image: /* AUTOREPLACE: */url("down-arrow.svg");
 }
-.search-container > .top-button {
-	position: absolute;
-	right: 0;
-	top: 10px;
-}
 .search-input {
 	/* Override Normalize.css: we have margins and do
 	 not want to overflow - the `moz` attribute is necessary
