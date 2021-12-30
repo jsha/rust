@@ -118,14 +118,27 @@ body {
 }
 
 h1 {
-	font-size: 1.5em;
+	font-size: 1.5rem;
 }
 h2 {
-	font-size: 1.4em;
+	font-size: 7.4rem;
+}
+h2.section-header,
+h2.small-section-header,
+.sidebar h2,
+#help h2 {
+	font-size: 1.4rem;
 }
 h3 {
-	font-size: 1.3em;
+	font-size: 7.3rem;
 }
+h3.section-header,
+h3.small-section-header,
+h3.search-loading,
+.sidebar h3 {
+	font-size: 1.3rem;
+}
+
 h1, h2, h3, h4, h5, h6 {
 	font-weight: 500;
 }
@@ -136,6 +149,7 @@ h1, h2, h3, h4 {
 .docblock h3, .docblock h4, h5, h6 {
 	margin: 15px 0 5px 0;
 }
+
 h1.fqn {
 	display: flex;
 	border-bottom: 1px dashed;
@@ -159,12 +173,14 @@ h2,
 .sidebar .others h3 {
 	border-bottom: 1px solid;
 }
+.impl,
 h3.code-header {
-	font-size: 1.1em;
+	font-size: 1.1rem;
 }
 h4.code-header {
-	font-size: 1em;
+	font-size: 1rem;
 }
+
 h3.code-header, h4.code-header {
 	font-weight: 600;
 	border-bottom-style: none;
@@ -545,6 +561,10 @@ nav.sub {
 	position: relative;
 }
 
+.search-loading {
+	text-align: center;
+}
+
 #results > table {
 	width: 100%;
 	table-layout: fixed;
@@ -579,18 +599,18 @@ nav.sub {
 	white-space: pre-wrap;
 }
 
-.top-doc .docblock h2 { font-size: 1.3em; }
-.top-doc .docblock h3 { font-size: 1.15em; }
+.top-doc .docblock h2 { font-size: 1.3rem; }
+.top-doc .docblock h3 { font-size: 1.15rem; }
 .top-doc .docblock h4,
 .top-doc .docblock h5 {
-	font-size: 1.1em;
+	font-size: 1.1rem;
 }
 .top-doc .docblock h6 {
-	font-size: 1em;
+	font-size: 1rem;
 }
 
-.docblock h5 { font-size: 1em; }
-.docblock h6 { font-size: 0.95em; }
+.docblock h5 { font-size: 1rem; }
+.docblock h6 { font-size: 0.95rem; }
 
 .docblock {
 	margin-left: 24px;
@@ -835,7 +855,6 @@ h2.small-section-header > .anchor {
 	position: absolute;
 	top: 0;
 	right: 0;
-	font-size: 17px;
 	font-weight: normal;
 }
 
@@ -1030,7 +1049,7 @@ body.blur > :not(#help) {
 .stab {
 	padding: 3px;
 	margin-bottom: 5px;
-	font-size: 90%;
+	font-size: 0.9rem;
 	font-weight: normal;
 }
 .stab p {
@@ -1069,7 +1088,6 @@ body.blur > :not(#help) {
 
 .since {
 	font-weight: normal;
-	font-size: initial;
 }
 
 .impl-items .since, .impl .since, .methods .since {
@@ -1080,7 +1098,6 @@ body.blur > :not(#help) {
 
 .impl-items .srclink, .impl .srclink, .methods .srclink {
 	/* Override header settings otherwise it's too bold */
-	font-size: 17px;
 	font-weight: normal;
 }
 
@@ -1089,7 +1106,6 @@ body.blur > :not(#help) {
 }
 
 .has-srclink {
-	font-size: 16px;
 	margin-bottom: 12px;
 	/* Push the src link out to the right edge consistently */
 	justify-content: space-between;

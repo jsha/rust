@@ -289,7 +289,7 @@ function hideThemeButtonState() {
             var params = searchState.getQueryStringParams();
             if (params.search !== undefined) {
                 var search = searchState.outputElement();
-                search.innerHTML = "<h3 style=\"text-align: center;\">" +
+                search.innerHTML = "<h3 class=\"search-loading\">" +
                    searchState.loadingText + "</h3>";
                 searchState.showResults(search);
                 loadSearch();
