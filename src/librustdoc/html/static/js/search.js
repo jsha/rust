@@ -1060,29 +1060,32 @@ window.initSearch = function(rawSearchIndex) {
             });
         } else {
             output.className = "search-failed" + extraClass;
-            output.innerHTML = "No results :(<br/>" +
-                "Try on <a href=\"https://duckduckgo.com/?q=" +
-                encodeURIComponent("rust " + query.query) +
-                "\">DuckDuckGo</a>?<br/><br/>" +
-                "Or try looking in one of these:<ul><li>The <a " +
-                "href=\"https://doc.rust-lang.org/reference/index.html\">Rust Reference</a> " +
-                " for technical details about the language.</li><li><a " +
-                "href=\"https://doc.rust-lang.org/rust-by-example/index.html\">Rust By " +
-                "Example</a> for expository code examples.</a></li><li>The <a " +
-                "href=\"https://doc.rust-lang.org/book/index.html\">Rust Book</a> for " +
-                "introductions to language features and the language itself.</li><li><a " +
-                "href=\"https://docs.rs\">Docs.rs</a> for documentation of crates released on" +
-                " <a href=\"https://crates.io/\">crates.io</a>.</li></ul>";
+            output.innerHTML = `No results :(<br/>Try on
+                <a href="https://duckduckgo.com/?q=${encodeURIComponent("rust " + query.query)}"
+                >DuckDuckGo</a>?<br/><br/>
+                Or try looking in one of these:
+                <ul>
+                    <li>The <a href="https://doc.rust-lang.org/reference/index.html">Rust
+                      Reference</a> for technical details about the language.</li>
+                    <li><a href="https://doc.rust-lang.org/rust-by-example/index.html">Rust
+                      By Example</a> for expository code examples.</li>
+                    <li>The <a href="https://doc.rust-lang.org/book/index.html">Rust Book</a> for
+                      introductions to language features and the language itself.</li>
+                    <li><a href="https://docs.rs">Docs.rs</a> for documentation of crates released
+                      on <a href="https://crates.io/">crates.io</a>.</li>
+                </ul>`;
         }
         return [output, length];
     }
 
     function makeTabHeader(tabNb, text, nbElems) {
         if (searchState.currentTab === tabNb) {
-            return "<button class=\"selected\">" + text +
-                   " <div class=\"count\">(" + nbElems + ")</div></button>";
+            var x = `<button class="selected">${text}
+                      <div class="count">(${nbElems})</div></button>`;
+                      console.log(x);
+                      return x;
         }
-        return "<button>" + text + " <div class=\"count\">(" + nbElems + ")</div></button>";
+        return `<button>${text}<div class="count">(${nbElems})</div></button>`;
     }
 
     function showResults(results, go_to_first) {
@@ -1126,9 +1129,9 @@ window.initSearch = function(rawSearchIndex) {
             }
         }
 
-        var output = "<h1>Results for " + escape(query.query) +
-            (query.type ? " (type: " + escape(query.type) + ")" : "") + "</h1>" +
-            "<div id=\"titles\">" +
+        var output = `<h1>Results for ${escape(query.query)}` +
+            (query.type ? " (type: " + escape(query.type) + ")" : "") +
+            `</h1><div id="titles">` +
             makeTabHeader(0, "In Names", ret_others[1]) +
             makeTabHeader(1, "In Parameters", ret_in_args[1]) +
             makeTabHeader(2, "In Return Types", ret_returned[1]) +
