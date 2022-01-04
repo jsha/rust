@@ -1,4 +1,4 @@
-/* global addClass, getNakedUrl, getSettingValue, hasOwnPropertyRustdoc, initSearch, onEach */
+/* global addClass, getNakedUrl, getSettingValue, initSearch, onEach */
 /* global onEachLazy, removeClass, searchState, updateLocalStorage */
 
 (function() {
@@ -36,6 +36,11 @@ var itemTypes = [
 // used for special search precedence
 var TY_PRIMITIVE = itemTypes.indexOf("primitive");
 var TY_KEYWORD = itemTypes.indexOf("keyword");
+const ROOT_PATH = typeof window !== 'undefined' ? window.rootPath : "";
+
+function hasOwnPropertyRustdoc(obj, property) {
+    return Object.prototype.hasOwnProperty.call(obj, property);
+}
 
 // In the search display, allows to switch between tabs.
 function printTab(nb) {
@@ -105,7 +110,7 @@ function levenshtein(s1, s2) {
     return s1_len + s2_len;
 }
 
-window.initSearch = function(rawSearchIndex) {
+function initSearch(rawSearchIndex) {
     var MAX_LEV_DISTANCE = 3;
     var MAX_RESULTS = 200;
     var GENERICS_DATA = 2;
@@ -123,15 +128,6 @@ window.initSearch = function(rawSearchIndex) {
     var searchWords;
     var currentResults;
     var ALIASES = {};
-    var params = searchState.getQueryStringParams();
-
-    // Populate search bar with query string search term when provided,
-    // but only if the input bar is empty. This avoid the obnoxious issue
-    // where you start trying to do a search, and the index loads, and
-    // suddenly your search is gone!
-    if (searchState.input.value === "") {
-        searchState.input.value = params.search || "";
-    }
 
     /**
      * Executes the query and returns a list of results for each results tab.
@@ -144,7 +140,7 @@ window.initSearch = function(rawSearchIndex) {
      *   others: Array<?>
      * }}
      */
-    function execQuery(query, searchWords, filterCrates) {
+    function execQuery(query, searchWords, filterCrates, currentCrate) {
         function itemTypeFromName(typename) {
             for (var i = 0, len = itemTypes.length; i < len; ++i) {
                 if (itemTypes[i] === typename) {
@@ -193,7 +189,7 @@ window.initSearch = function(rawSearchIndex) {
             return out;
         }
 
-        function sortResults(results, isType) {
+        function sortResults(results, isType, currentCrate) {
             var ar = [];
             for (var entry in results) {
                 if (hasOwnPropertyRustdoc(results, entry)) {
@@ -224,8 +220,8 @@ window.initSearch = function(rawSearchIndex) {
                 if (a !== b) { return a - b; }
 
                 // sort by crate (non-current crate goes later)
-                a = (aaa.item.crate !== window.currentCrate);
-                b = (bbb.item.crate !== window.currentCrate);
+                a = (aaa.item.crate !== currentCrate);
+                b = (bbb.item.crate !== currentCrate);
                 if (a !== b) { return a - b; }
 
                 // sort by item name length (longer goes later)
@@ -590,7 +586,7 @@ window.initSearch = function(rawSearchIndex) {
             };
         }
 
-        function handleAliases(ret, query, filterCrates) {
+        function handleAliases(ret, query, filterCrates, currentCrate) {
             // We separate aliases and crate aliases because we want to have current crate
             // aliases to be before the others in the displayed results.
             var aliases = [];
@@ -606,7 +602,7 @@ window.initSearch = function(rawSearchIndex) {
             } else {
                 Object.keys(ALIASES).forEach(function(crate) {
                     if (ALIASES[crate][query.search]) {
-                        var pushTo = crate === window.currentCrate ? crateAliases : aliases;
+                        var pushTo = crate === currentCrate ? crateAliases : aliases;
                         var query_aliases = ALIASES[crate][query.search];
                         var len = query_aliases.length;
                         for (var i = 0; i < len; ++i) {
@@ -639,8 +635,9 @@ window.initSearch = function(rawSearchIndex) {
                     ret.others.pop();
                 }
             };
-            onEach(aliases, pushFunc);
-            onEach(crateAliases, pushFunc);
+
+            aliases.forEach(pushFunc);
+            crateAliases.forEach(pushFunc);
         }
 
         /**
@@ -841,11 +838,11 @@ window.initSearch = function(rawSearchIndex) {
         }
 
         var ret = {
-            "in_args": sortResults(results_in_args, true),
-            "returned": sortResults(results_returned, true),
-            "others": sortResults(results, false),
+            "in_args": sortResults(results_in_args, currentCrate, true),
+            "returned": sortResults(results_returned, currentCrate, true),
+            "others": sortResults(results, currentCrate, false),
         };
-        handleAliases(ret, query, filterCrates);
+        handleAliases(ret, query, filterCrates, currentCrate);
         return ret;
     }
 
@@ -934,15 +931,15 @@ window.initSearch = function(rawSearchIndex) {
 
         if (type === "mod") {
             displayPath = path + "::";
-            href = window.rootPath + path.replace(/::/g, "/") + "/" +
+            href = ROOT_PATH + path.replace(/::/g, "/") + "/" +
                    name + "/index.html";
         } else if (type === "primitive" || type === "keyword") {
             displayPath = "";
-            href = window.rootPath + path.replace(/::/g, "/") +
+            href = ROOT_PATH + path.replace(/::/g, "/") +
                    "/" + type + "." + name + ".html";
         } else if (type === "externcrate") {
             displayPath = "";
-            href = window.rootPath + name + "/index.html";
+            href = ROOT_PATH + name + "/index.html";
         } else if (item.parent !== undefined) {
             var myparent = item.parent;
             var anchor = "#" + type + "." + name;
@@ -965,13 +962,13 @@ window.initSearch = function(rawSearchIndex) {
             } else {
                 displayPath = path + "::" + myparent.name + "::";
             }
-            href = window.rootPath + path.replace(/::/g, "/") +
+            href = ROOT_PATH + path.replace(/::/g, "/") +
                    "/" + pageType +
                    "." + pageName +
                    ".html" + anchor;
         } else {
             displayPath = item.path + "::";
-            href = window.rootPath + item.path.replace(/::/g, "/") +
+            href = ROOT_PATH + item.path.replace(/::/g, "/") +
                    "/" + type + "." + name + ".html";
         }
         return [displayPath, href];
@@ -1244,7 +1241,7 @@ window.initSearch = function(rawSearchIndex) {
         for (var i = 0, len = queries.length; i < len; ++i) {
             query = queries[i].trim();
             if (query.length !== 0) {
-                var tmp = execQuery(getQuery(query), searchWords, filterCrates);
+                var tmp = execQuery(getQuery(query), searchWords, filterCrates, window.currentCrate);
 
                 results.in_args.push(tmp.in_args);
                 results.returned.push(tmp.returned);
@@ -1481,6 +1478,16 @@ window.initSearch = function(rawSearchIndex) {
     }
 
     function registerSearchEvents() {
+        var params = searchState.getQueryStringParams();
+
+        // Populate search bar with query string search term when provided,
+        // but only if the input bar is empty. This avoid the obnoxious issue
+        // where you start trying to do a search, and the index loads, and
+        // suddenly your search is gone!
+        if (searchState.input.value === "") {
+            searchState.input.value = params.search || "";
+        }
+
         var searchAfter500ms = function() {
             searchState.clearInputTimeout();
             if (searchState.input.value.length === 0) {
@@ -1617,15 +1624,32 @@ window.initSearch = function(rawSearchIndex) {
     }
 
     searchWords = buildIndex(rawSearchIndex);
-    registerSearchEvents();
-    // If there's a search term in the URL, execute the search now.
-    if (searchState.getQueryStringParams().search) {
-        search();
+
+    if (typeof exports !== 'undefined') {
+        exports.initSearch = initSearch;
+        exports.execQuery = execQuery;
+        exports.getQuery = getQuery;
     }
+    return searchWords;
 };
 
-if (window.searchIndex !== undefined) {
-    initSearch(window.searchIndex);
+if (typeof window !== 'undefined') {
+    window.initSearch = initSearch;
+    if (window.searchIndex !== undefined) {
+        initSearch(window.searchIndex);
+        // TODO: make this happen in the other case too, when search-index.js
+        // loads later than search.js.
+        registerSearchEvents();
+        // If there's a search term in the URL, execute the search now.
+        if (searchState.getQueryStringParams().search) {
+            search();
+        }
+    }
+} else {
+    // Running in Node, not a browser. Run initSearch just to produce the
+    // exports.
+    initSearch({});
 }
+
 
 })();
