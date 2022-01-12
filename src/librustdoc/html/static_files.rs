@@ -85,6 +85,9 @@ crate mod themes {
 
     /// The "ayu" theme.
     crate static AYU: &str = include_str!("static/css/themes/ayu.css");
+
+    /// The "solarized" theme.
+    crate static SOLARIZED: &str = include_str!("static/css/themes/solarized.css");
 }
 
 /// Files related to the Fira Sans font.

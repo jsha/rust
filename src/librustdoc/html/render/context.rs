@@ -499,6 +499,7 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
         scx.style_files.push(StylePath { path: PathBuf::from("light.css") });
         scx.style_files.push(StylePath { path: PathBuf::from("dark.css") });
         scx.style_files.push(StylePath { path: PathBuf::from("ayu.css") });
+        scx.style_files.push(StylePath { path: PathBuf::from("solarized.css") });
 
         let dst = output;
         scx.ensure_dir(&dst)?;

@@ -229,6 +229,9 @@ pub(super) fn write_shared(
             "light" => write_minify("light.css", static_files::themes::LIGHT, cx, options)?,
             "dark" => write_minify("dark.css", static_files::themes::DARK, cx, options)?,
             "ayu" => write_minify("ayu.css", static_files::themes::AYU, cx, options)?,
+            "solarized" => {
+                write_minify("solarized.css", static_files::themes::SOLARIZED, cx, options)?
+            }
             _ => {
                 // Handle added third-party themes
                 let filename = format!("{}.{}", theme, extension);
