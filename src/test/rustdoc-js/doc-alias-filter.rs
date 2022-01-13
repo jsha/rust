@@ -1,4 +1,4 @@
-#[doc(alias = "true")]
+#[doc(alias = "trueish")]
 pub struct Foo;
 
 #[doc(alias = "false")]

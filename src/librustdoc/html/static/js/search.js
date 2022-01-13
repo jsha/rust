@@ -811,9 +811,7 @@ window.initSearch = function(rawSearchIndex) {
                     }
                 }
                 if ((lev = levenshtein(searchWords[j], val)) <= MAX_LEV_DISTANCE) {
-                    if (typePassesFilter(typeFilter, ty.ty)) {
-                        lev += 1;
-                    } else {
+                    if (!typePassesFilter(typeFilter, ty.ty)) {
                         lev = MAX_LEV_DISTANCE + 1;
                     }
                 }
