@@ -168,7 +168,7 @@ h2,
 	border-bottom: 1px solid;
 }
 h3.code-header {
-	font-size: 1.1rem;
+	font-size: 1.2rem;
 }
 h4.code-header {
 	font-size: 1rem;
@@ -1545,6 +1545,16 @@ kbd {
 }
 #implementors-list > .impl-items .table-display .out-of-band {
 	font-size: 1.0625rem;
+}
+
+#trait-implementations-list .rustdoc-toggle:not(.implementors-toggle) > summary::before,
+#blanket-implementations-list .rustdoc-toggle:not(.implementors-toggle) > summary::before,
+#synthetic-implementations-list .rustdoc-toggle:not(.implementors-toggle) > summary::before {
+	display: none;
+}
+
+.implementors-toggle {
+	margin-bottom: 2em;
 }
 
 .table-display td:hover .anchor {

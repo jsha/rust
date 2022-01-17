@@ -24,7 +24,7 @@ assert-count: (".sidebar .location", 2)
 assert-false: ".sidebar-elems > .crate"
 
 click: ".sidebar-links a"
-assert-property: ("html", {"scrollTop": "389"})
+assert-property: ("html", {"scrollTop": "391"})
 
 click: ".sidebar h2.location"
 assert-property: ("html", {"scrollTop": "0"})
