@@ -237,10 +237,16 @@ details.undocumented > summary::before {
 	color: #ddd;
 }
 
-.stab.unstable { background: #FFF5D6; border-color: #FFC600; color: #2f2f2f; }
-.stab.deprecated { background: #ffc4c4; border-color: #db7b7b; color: #2f2f2f; }
-.stab.portability { background: #F3DFFF; border-color: #b07bdb; color: #2f2f2f; }
-.stab.portability > code { background: none; }
+.stab.unstable,
+.stab.deprecated,
+.stab.portability {
+	color: #c5c5c5;
+	background: #314559;
+}
+.stab.portability > code {
+	color: #e6e1cf;
+	background: none;
+}
 
 #help > div {
 	background: #4d4d4d;
