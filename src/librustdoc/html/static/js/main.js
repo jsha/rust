@@ -717,11 +717,11 @@ function hideThemeButtonState() {
     function labelForToggleButton(sectionIsCollapsed) {
         if (sectionIsCollapsed) {
             // button will expand the section
-            return "+";
+            return "show docs";
         }
         // button will collapse the section
         // note that this text is also set in the HTML template in ../render/mod.rs
-        return "\u2212"; // "\u2212" is "−" minus sign
+        return "hide docs";
     }
 
     function toggleAllDocs() {
