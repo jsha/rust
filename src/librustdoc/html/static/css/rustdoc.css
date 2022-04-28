@@ -1676,7 +1676,7 @@ details.rustdoc-toggle[open] > summary.hideme::after {
 	}
 }
 
-@media (max-width: 700px) {
+@media (max-width: 700px), (max-height: 400px) {
 	/* When linking to an item with an `id` (for instance, by clicking a link in the sidebar,
 	   or visiting a URL with a fragment like `#method.new`, we don't want the item to be obscured
 	   by the topbar. Anything with an `id` gets scroll-margin-top equal to .mobile-topbar's size.
