@@ -97,6 +97,15 @@ html {
 }
 
 /* General structure and fonts */
+details.rustdoc-toggle {
+	content-visibility: auto;
+	/*contain: content;*/
+	contain-intrinsic-size: auto 500px;
+}
+
+nav.sidebar {
+	contain: content;
+}
 
 body {
 	/* Line spacing at least 1.5 per Web Content Accessibility Guidelines
