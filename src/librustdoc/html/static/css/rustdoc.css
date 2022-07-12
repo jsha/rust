@@ -110,6 +110,7 @@ body {
 	/* Then override it with `anywhere`, which is required to make non-Safari browsers break
 	   more aggressively when we want them to. */
 	overflow-wrap: anywhere;
+	height: 100vh;
 
 	-webkit-font-feature-settings: "kern", "liga";
 	-moz-font-feature-settings: "kern", "liga";
@@ -271,6 +272,14 @@ main {
 	flex-grow: 1;
 	padding: 10px 15px 40px 45px;
 	min-width: 0;
+
+	/* main is the big scrollable element in our documents, insted of body.
+   * To make sure scrolling with spacebar and PageDown works, we initially
+   * focus it using JS. To avoid an outline indicating that focus, we set
+   * outline to none. */
+	height: 100vh;
+	overflow-y: scroll;
+	outline: none;
 }
 
 .source main {
@@ -1767,8 +1776,6 @@ details.rustdoc-toggle[open] > summary.hideme::after {
 	}
 
 	.sidebar {
-		position: fixed;
-		top: 45px;
 		/* Hide the sidebar offscreen while not in use. Doing this instead of display: none means
 		   the sidebar stays visible for screen readers, which is useful for navigation. */
 		left: -1000px;

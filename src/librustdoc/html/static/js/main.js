@@ -927,6 +927,11 @@ function loadCss(cssFileName) {
     onHashChange(null);
     window.addEventListener("hashchange", onHashChange);
     searchState.setup();
+
+    // In our documents, `main` is the scrollable element instead of body.
+    // To make sure scrolling with spacebar and Page Down works, we initially
+    // focus it.
+    document.getElementsByTagName("main")[0].focus()
 }());
 
 (function () {
