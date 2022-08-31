@@ -84,7 +84,9 @@ pub(super) fn write_shared(
     // Crate resources should always be dynamic.
     let write_crate = |p: &str, make_content: &dyn Fn() -> Result<Vec<u8>, Error>| {
         let content = make_content()?;
-        if options.emit.contains(&crate::config::EmitType::InvocationSpecific) {
+        if options.emit.is_empty()
+            || options.emit.contains(&crate::config::EmitType::InvocationSpecific)
+        {
             let output_filename = static_files::suffix_path(p, &cx.dst, &cx.shared.resource_suffix);
             cx.shared.fs.write(output_filename, content)
         } else {
@@ -102,7 +104,7 @@ pub(super) fn write_shared(
         )
     }
 
-    if options.emit.contains(&EmitType::Toolchain) {
+    if options.emit.is_empty() || options.emit.contains(&EmitType::Toolchain) {
         // We use the AUTOREPLACE mechanism to inject into our static CSS certain
         // values that are only known at doc build time. Since this mechanism is somewhat
         // surprising when reading the code, please limit it to rustdoc.css.
