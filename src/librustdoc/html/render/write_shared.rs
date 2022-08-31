@@ -132,14 +132,18 @@ pub(super) fn write_shared(
         let extension =
             try_none!(try_none!(entry.path.extension(), &entry.path).to_str(), &entry.path);
 
+        // Skip the official themes
+        match theme.as_str() {
+            "light" | "dark" | "ayu" => continue,
+            _ => {}
+        };
+
         // Handle added third-party themes
         let filename = format!("{}.{}", theme, extension);
+
         write_crate(&filename, &|| Ok(try_err!(fs::read(&entry.path), &entry.path)))?;
         themes.insert(theme.to_owned());
     }
-
-    let mut themes: Vec<&String> = themes.iter().collect();
-    themes.sort();
 
     if cx.include_sources {
         write_minify(&static_files::sidebar::SOURCE_SCRIPT, cx, options)?;

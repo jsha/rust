@@ -55,9 +55,10 @@ impl StaticFile {
     }
 
     pub(crate) fn output_filename(&self, dst: &PathBuf, suffix: &str) -> PathBuf {
+        let filename = self.filename.rsplit("/").next().unwrap();
         match self.versioning {
-            Versioning::Unversioned => dst.join(self.filename),
-            Versioning::ToolchainSpecific => suffix_path(self.filename, dst, suffix),
+            Versioning::Unversioned => dst.join(filename),
+            Versioning::ToolchainSpecific => suffix_path(filename, dst, suffix),
         }
     }
 }
