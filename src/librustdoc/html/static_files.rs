@@ -8,6 +8,8 @@
 //! directly written to a `Write` handle.
 
 use crate::config::EmitType;
+use rustc_data_structures::fx::FxHasher;
+use std::hash::Hasher;
 use std::{
     ffi::OsStr,
     path::{Path, PathBuf},
@@ -54,16 +56,33 @@ impl StaticFile {
         emit.contains(&kind)
     }
 
+    pub(crate) fn hash(&self) -> u64 {
+        let mut hasher = FxHasher::default();
+        hasher.write(self.bytes);
+        hasher.finish()
+    }
+
+    fn suffix(&self, resource_suffix: &str) -> String {
+        if resource_suffix == "" {
+            format!("-{:016x}", self.hash())
+        } else {
+            format!("-{:016x}-{}", self.hash(), resource_suffix)
+        }
+    }
+
     pub(crate) fn output_filename(&self, dst: &PathBuf, suffix: &str) -> PathBuf {
         let filename = self.filename.rsplit("/").next().unwrap();
         match self.versioning {
-            Versioning::Unversioned => dst.join(filename),
-            Versioning::ToolchainSpecific => suffix_path(filename, dst, suffix),
+            Versioning::Unversioned => dst.join("static").join(filename),
+            Versioning::ToolchainSpecific => {
+                let suffix_with_hash = self.suffix(suffix);
+                Path::new("static").join(suffix_path(filename, &suffix_with_hash))
+            }
         }
     }
 }
 
-pub(crate) fn suffix_path(filename: &str, dst: &PathBuf, resource_suffix: &str) -> PathBuf {
+pub(crate) fn suffix_path(filename: &str, resource_suffix: &str) -> PathBuf {
     // We use splitn vs Path::extension here because we might get a filename
     // like `style.min.css` and we want to process that into
     // `style-suffix.min.css`.  Path::extension would just return `css`
@@ -71,7 +90,7 @@ pub(crate) fn suffix_path(filename: &str, dst: &PathBuf, resource_suffix: &str) 
     // want.
     let (base, ext) = filename.split_once('.').unwrap();
     let filename = format!("{}{}.{}", base, resource_suffix, ext);
-    dst.join(&filename)
+    filename.into()
 }
 
 macro_rules! toolchain_specific {
