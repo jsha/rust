@@ -472,7 +472,7 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
         );
 
         let (sender, receiver) = channel();
-        let mut scx = SharedContext {
+        let scx = SharedContext {
             tcx,
             src_root,
             local_sources,
@@ -504,9 +504,9 @@ impl<'tcx> FormatRenderer<'tcx> for Context<'tcx> {
         // by the browser as the theme stylesheet. The theme system (hackily) works by
         // changing the href to this stylesheet. All other themes are disabled to
         // prevent rule conflicts
-        scx.style_files.push(StylePath { path: PathBuf::from("light.css") });
-        scx.style_files.push(StylePath { path: PathBuf::from("dark.css") });
-        scx.style_files.push(StylePath { path: PathBuf::from("ayu.css") });
+        // scx.style_files.push(StylePath { path: PathBuf::from("light.css") });
+        // scx.style_files.push(StylePath { path: PathBuf::from("dark.css") });
+        // scx.style_files.push(StylePath { path: PathBuf::from("ayu.css") });
 
         let dst = output;
         scx.ensure_dir(&dst)?;

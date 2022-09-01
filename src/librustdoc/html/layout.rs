@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use rustc_data_structures::fx::FxHashMap;
 
-use crate::error::Error;
 use crate::externalfiles::ExternalHtml;
 use crate::html::format::{Buffer, Print};
 use crate::html::render::{ensure_trailing_slash, StylePath};
@@ -53,9 +52,10 @@ struct PageLayout<'a> {
     source_script_js: &'static static_files::StaticFile,
     scrape_examples_js: &'static static_files::StaticFile,
 
-    // crates_js: &'static static_files::StaticFile,
-    // source_files_js: &'static static_files::StaticFile,
-    // sidebar_items_js: &'static static_files::StaticFile,
+    search_js: &'static static_files::StaticFile,
+    settings_js: &'static static_files::StaticFile,
+    settings_css: &'static static_files::StaticFile,
+
     favicon_svg: &'static static_files::StaticFile,
     favicon_png_16: &'static static_files::StaticFile,
     favicon_png_32: &'static static_files::StaticFile,
@@ -80,11 +80,11 @@ pub(crate) fn render<T: Print, S: Print>(
 ) -> String {
     let static_root_path = page.get_static_root_path();
     let krate_with_trailing_slash = ensure_trailing_slash(&layout.krate).to_string();
-    let mut themes: Vec<String> = style_files
-        .iter()
-        .map(StylePath::basename)
-        .collect::<Result<_, Error>>()
-        .unwrap_or_default();
+    let mut themes: Vec<String> =
+        style_files.iter().map(|s| s.path.display().to_string()).collect();
+    themes.push(static_files::themes::LIGHT.to_string());
+    themes.push(static_files::themes::DARK.to_string());
+    themes.push(static_files::themes::AYU.to_string());
     themes.sort();
     let css = vec![&static_files::NORMALIZE_CSS, &static_files::RUSTDOC_CSS];
 
@@ -108,6 +108,10 @@ pub(crate) fn render<T: Print, S: Print>(
         main_js: &static_files::MAIN_JS,
         source_script_js: &static_files::sidebar::SOURCE_SCRIPT,
         scrape_examples_js: &static_files::SCRAPE_EXAMPLES_JS,
+
+        search_js: &static_files::SEARCH_JS,
+        settings_js: &static_files::SETTINGS_JS,
+        settings_css: &static_files::SETTINGS_CSS,
 
         favicon_svg: &static_files::RUST_FAVICON_SVG,
         favicon_png_16: &static_files::RUST_FAVICON_PNG_16,

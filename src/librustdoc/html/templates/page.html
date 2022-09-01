@@ -15,8 +15,8 @@
     {%- endfor -%}
     {%- for theme in themes -%}
         <link rel="stylesheet" type="text/css" {# -#}
-            href="{{static_root_path|safe}}{{theme}}{{page.resource_suffix}}.css" {# -#}
-        {%- if theme == "light" -%}
+            href="{{static_root_path|safe}}{{theme}}" {# -#}
+        {%- if theme.contains("/light-") -%}
             id="themeStyle"
         {%- else -%}
             disabled
@@ -133,10 +133,14 @@
     {{- layout.external_html.after_content|safe -}}
     <div id="rustdoc-vars" {# -#}
          data-root-path="{{page.root_path|safe}}" {# -#}
+         data-static-root-path="{{static_root_path|safe}}" {# -#}
          data-current-crate="{{layout.krate}}" {# -#}
          data-themes="{{themes|join(",") }}" {# -#}
          data-resource-suffix="{{page.resource_suffix}}" {# -#}
          data-rustdoc-version="{{rustdoc_version}}" {# -#}
+         data-search-js="{{search_js}}" {# -#}
+         data-settings-js="{{settings_js}}" {# -#}
+         data-settings-css="{{settings_css}}" {# -#}
     > {#- -#}
     </div> {#- -#}
 </body> {#- -#}
