@@ -62,23 +62,24 @@ impl StaticFile {
         hasher.finish()
     }
 
-    fn suffix(&self, resource_suffix: &str) -> String {
-        if resource_suffix == "" {
-            format!("-{:016x}", self.hash())
-        } else {
-            format!("-{:016x}-{}", self.hash(), resource_suffix)
-        }
+    fn suffix(&self) -> String {
+        format!("-{:016x}", self.hash())
     }
 
-    pub(crate) fn output_filename(&self, dst: &PathBuf, suffix: &str) -> PathBuf {
+    pub(crate) fn output_filename(&self) -> PathBuf {
         let filename = self.filename.rsplit("/").next().unwrap();
         match self.versioning {
-            Versioning::Unversioned => dst.join("static").join(filename),
+            Versioning::Unversioned => Path::new("static.files").join(filename),
             Versioning::ToolchainSpecific => {
-                let suffix_with_hash = self.suffix(suffix);
-                Path::new("static").join(suffix_path(filename, &suffix_with_hash))
+                Path::new("static.files").join(suffix_path(filename, &self.suffix()))
             }
         }
+    }
+}
+
+impl std::fmt::Display for StaticFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.output_filename().display())
     }
 }
 

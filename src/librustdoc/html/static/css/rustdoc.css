@@ -970,7 +970,7 @@ table,
 	background-color: transparent;
 	background-size: 20px;
 	background-position: calc(100% - 1px) 56%;
-	background-image: /* AUTOREPLACE: */url("down-arrow.svg");
+	background-image: url("down-arrow-2d685a4bae708e15.svg");
 	max-width: 100%;
 	text-overflow: ellipsis;
 }
@@ -1746,11 +1746,11 @@ details.rustdoc-toggle[open] > summary.hideme > span {
 
 details.rustdoc-toggle[open] > summary::before,
 details.rustdoc-toggle[open] > summary.hideme::before {
-	background-image: /* AUTOREPLACE: */url("toggle-minus.svg");
+	background-image: url("toggle-minus-31bbd6e4c77f5c96.svg");
 }
 
 details.rustdoc-toggle > summary::before {
-	background-image: /* AUTOREPLACE: */url("toggle-plus.svg");
+	background-image: url("toggle-plus-1092eb4930d581b0.svg");
 }
 
 details.rustdoc-toggle[open] > summary::before,

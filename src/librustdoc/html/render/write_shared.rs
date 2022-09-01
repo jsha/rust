@@ -28,9 +28,7 @@ impl Context<'_> {
         emit: &[EmitType],
     ) -> Result<(), Error> {
         if resource.should_emit(emit) {
-            self.shared
-                .fs
-                .write(resource.output_filename(&self.dst, &self.shared.resource_suffix), contents)
+            self.shared.fs.write(self.dst.join(resource.output_filename()), contents)
         } else {
             Ok(())
         }
@@ -87,43 +85,14 @@ pub(super) fn write_shared(
         if options.emit.is_empty()
             || options.emit.contains(&crate::config::EmitType::InvocationSpecific)
         {
-            let output_filename = static_files::suffix_path(p, &cx.dst, &cx.shared.resource_suffix);
-            cx.shared.fs.write(output_filename, content)
+            let output_filename = static_files::suffix_path(p, &cx.shared.resource_suffix);
+            cx.shared.fs.write(cx.dst.join(output_filename), content)
         } else {
             Ok(())
         }
     };
 
-    // Given "foo.svg", return e.g. "url(\"foo1.58.0.svg\")"
-    fn ver_url(cx: &Context<'_>, basename: &'static str) -> String {
-        format!(
-            "url(\"{}\")",
-            static_files::suffix_path(basename, &cx.dst, &cx.shared.resource_suffix)
-                .to_str()
-                .unwrap()
-        )
-    }
-
-    if options.emit.is_empty() || options.emit.contains(&EmitType::Toolchain) {
-        // We use the AUTOREPLACE mechanism to inject into our static CSS certain
-        // values that are only known at doc build time. Since this mechanism is somewhat
-        // surprising when reading the code, please limit it to rustdoc.css.
-        let mut rustdoc_css_rewritten = static_files::RUSTDOC_CSS
-            .as_str()
-            .replace(
-                "/* AUTOREPLACE: */url(\"toggle-minus.svg\")",
-                &ver_url(cx, "toggle-minus.svg"),
-            )
-            .replace("/* AUTOREPLACE: */url(\"toggle-plus.svg\")", &ver_url(cx, "toggle-plus.svg"))
-            .replace("/* AUTOREPLACE: */url(\"down-arrow.svg\")", &ver_url(cx, "down-arrow.svg"));
-        if options.enable_minification {
-            rustdoc_css_rewritten = minifier::js::minify(&rustdoc_css_rewritten).to_string()
-        };
-        cx.shared.fs.write(
-            static_files::RUSTDOC_CSS.output_filename(&cx.dst, &cx.shared.resource_suffix),
-            rustdoc_css_rewritten,
-        )?;
-    }
+    cx.shared.fs.create_dir_all(cx.dst.join("static.files")).unwrap(); //TODO: handle error
 
     // To avoid "light.css" to be overwritten, we'll first run over the received themes and only
     // then we'll run over the "official" styles.
@@ -134,7 +103,7 @@ pub(super) fn write_shared(
         let extension =
             try_none!(try_none!(entry.path.extension(), &entry.path).to_str(), &entry.path);
 
-        // Skip the official themes
+        // Skip the official themes. They are written below as part of FILES_TOOLCHAIN.
         match theme.as_str() {
             "light" | "dark" | "ayu" => continue,
             _ => {}
@@ -153,9 +122,8 @@ pub(super) fn write_shared(
 
     if let Some(ref css) = cx.shared.layout.css_file_extension {
         let buffer = try_err!(fs::read_to_string(css), css);
-        let path =
-            static_files::suffix_path(css.to_str().unwrap(), &cx.dst, &cx.shared.resource_suffix);
-        cx.shared.fs.write(path, buffer)?;
+        let path = static_files::suffix_path(css.to_str().unwrap(), &cx.shared.resource_suffix);
+        cx.shared.fs.write(cx.dst.join(path), buffer)?;
     }
 
     for f in &static_files::FILES_UNVERSIONED {

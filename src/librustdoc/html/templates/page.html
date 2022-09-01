@@ -7,17 +7,12 @@
     <meta name="description" content="{{page.description}}"> {#- -#}
     <meta name="keywords" content="{{page.keywords}}"> {#- -#}
     <title>{{page.title}}</title> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}SourceSerif4-Regular.ttf.woff2"> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}FiraSans-Regular.woff2"> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}FiraSans-Medium.woff2"> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}SourceCodePro-Regular.ttf.woff2"> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}SourceSerif4-Bold.ttf.woff2"> {#- -#}
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}SourceCodePro-Semibold.ttf.woff2"> {#- -#}
-    <link rel="stylesheet" type="text/css" {# -#}
-          href="{{static_root_path|safe}}normalize{{page.resource_suffix}}.css"> {#- -#}
-    <link rel="stylesheet" type="text/css" {# -#}
-          href="{{static_root_path|safe}}rustdoc{{page.resource_suffix}}.css" {# -#}
-          id="mainThemeStyle"> {#- -#}
+    {%- for font in font_preloads -%}
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{static_root_path|safe}}{{font.output_filename().display()|safe}}"> {#- -#}
+    {%- endfor -%}
+    {%- for css_url in css -%}
+    <link rel="stylesheet" type="text/css" href="{{static_root_path|safe}}{{css_url|safe}}"> {#- -#}
+    {%- endfor -%}
     {%- for theme in themes -%}
         <link rel="stylesheet" type="text/css" {# -#}
             href="{{static_root_path|safe}}{{theme}}{{page.resource_suffix}}.css" {# -#}
@@ -33,18 +28,18 @@
         data-{{k}}="{{v}}"
       {%- endfor -%}
     ></script> {#- -#}
-    <script src="{{static_root_path|safe}}storage{{page.resource_suffix}}.js"></script> {#- -#}
+    <script src="{{static_root_path|safe}}{{storage_js}}"></script> {#- -#}
     {%- if page.css_class.contains("crate") -%}
     <script defer src="{{page.root_path|safe}}crates{{page.resource_suffix}}.js"></script> {#- -#}
     {%- else if page.css_class == "source" -%}
-    <script defer src="{{static_root_path|safe}}source-script{{page.resource_suffix}}.js"></script> {#- -#}
+    <script defer src="{{static_root_path|safe}}{{source_script_js}}"></script> {#- -#}
     <script defer src="{{page.root_path|safe}}source-files{{page.resource_suffix}}.js"></script> {#- -#}
     {%- else if !page.css_class.contains("mod") -%}
     <script defer src="sidebar-items{{page.resource_suffix}}.js"></script> {#- -#}
     {%- endif -%}
-    <script defer src="{{static_root_path|safe}}main{{page.resource_suffix}}.js"></script> {#- -#}
+    <script defer src="{{static_root_path|safe}}{{main_js}}"></script> {#- -#}
     {%- if layout.scrape_examples_extension -%}
-    <script defer src="{{page.root_path|safe}}scrape-examples{{page.resource_suffix}}.js"></script> {#- -#}
+    <script defer src="{{page.root_path|safe}}{{scrape_examples_js}}"></script> {#- -#}
     {%- endif -%}
     <noscript> {#- -#}
         <link rel="stylesheet" {# -#}
@@ -58,11 +53,11 @@
         <link rel="icon" href="{{layout.favicon}}"> {#- -#}
     {%- else -%}
         <link rel="alternate icon" type="image/png" {# -#}
-            href="{{static_root_path|safe}}favicon-16x16{{page.resource_suffix}}.png"> {#- -#}
+            href="{{static_root_path|safe}}{{favicon_png_16}}"> {#- -#}
         <link rel="alternate icon" type="image/png" {# -#}
-            href="{{static_root_path|safe}}favicon-32x32{{page.resource_suffix}}.png"> {#- -#}
+            href="{{static_root_path|safe}}{{favicon_png_32}}"> {#- -#}
         <link rel="icon" type="image/svg+xml" {# -#}
-            href="{{static_root_path|safe}}favicon{{page.resource_suffix}}.svg"> {#- -#}
+            href="{{static_root_path|safe}}{{favicon_svg}}"> {#- -#}
     {%- endif -%}
     {{- layout.external_html.in_header|safe -}}
 </head> {#- -#}
@@ -80,7 +75,7 @@
             {%- if !layout.logo.is_empty() -%}
                 <img src="{{layout.logo}}" alt="logo"> {#- -#}
             {%- else -%}
-                <img class="rust-logo" src="{{static_root_path|safe}}rust-logo{{page.resource_suffix}}.svg" alt="logo"> {#- -#}
+                <img class="rust-logo" src="{{static_root_path|safe}}{{rust_logo_svg}}" alt="logo"> {#- -#}
             {%- endif -%}
             </div> {#- -#}
         </a> {#- -#}
@@ -92,7 +87,7 @@
                 {%- if !layout.logo.is_empty()  %}
                     <img src="{{layout.logo}}" alt="logo"> {#- -#}
                 {%- else -%}
-                    <img class="rust-logo" src="{{static_root_path|safe}}rust-logo{{page.resource_suffix}}.svg" alt="logo"> {#- -#}
+                    <img class="rust-logo" src="{{static_root_path|safe}}{{rust_logo_svg}}" alt="logo"> {#- -#}
                 {%- endif -%}
             </div> {#- -#}
         </a> {#- -#}
@@ -105,7 +100,7 @@
                     {%- if !layout.logo.is_empty()  %}
                         <img src="{{layout.logo}}" alt="logo"> {#- -#}
                     {%- else -%}
-                        <img class="rust-logo" src="{{static_root_path|safe}}rust-logo{{page.resource_suffix}}.svg" alt="logo"> {#- -#}
+                        <img class="rust-logo" src="{{static_root_path|safe}}{{rust_logo_svg}}" alt="logo"> {#- -#}
                     {%- endif -%}
                 </a> {#- -#}
                 <nav class="sub"> {#- -#}
@@ -125,7 +120,7 @@
                             <div id="settings-menu" tabindex="-1"> {#- -#}
                                 <a href="{{page.root_path|safe}}settings.html" title="settings"> {#- -#}
                                     <img width="22" height="22" alt="Change settings" {# -#}
-                                     src="{{static_root_path|safe}}wheel{{page.resource_suffix}}.svg"> {#- -#}
+                                     src="{{static_root_path|safe}}{{wheel_svg}}"> {#- -#}
                                 </a> {#- -#}
                             </div> {#- -#}
                         </div> {#- -#}
