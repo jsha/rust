@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use rustc_data_structures::fx::FxHashMap;
 
-use crate::error::Error;
 use crate::externalfiles::ExternalHtml;
 use crate::html::format::{Buffer, Print};
 use crate::html::render::{ensure_trailing_slash, StylePath};
+use crate::html::static_files;
 
 use askama::Template;
 
@@ -45,6 +45,25 @@ struct PageLayout<'a> {
     static_root_path: &'a str,
     page: &'a Page<'a>,
     layout: &'a Layout,
+    font_preloads: Vec<&'static static_files::StaticFile>,
+
+    storage_js: &'static static_files::StaticFile,
+    main_js: &'static static_files::StaticFile,
+    source_script_js: &'static static_files::StaticFile,
+    scrape_examples_js: &'static static_files::StaticFile,
+
+    search_js: &'static static_files::StaticFile,
+    settings_js: &'static static_files::StaticFile,
+    settings_css: &'static static_files::StaticFile,
+
+    favicon_svg: &'static static_files::StaticFile,
+    favicon_png_16: &'static static_files::StaticFile,
+    favicon_png_32: &'static static_files::StaticFile,
+
+    rust_logo_svg: &'static static_files::StaticFile,
+    wheel_svg: &'static static_files::StaticFile,
+
+    css: Vec<&'static static_files::StaticFile>,
     themes: Vec<String>,
     sidebar: String,
     content: String,
@@ -61,12 +80,14 @@ pub(crate) fn render<T: Print, S: Print>(
 ) -> String {
     let static_root_path = page.get_static_root_path();
     let krate_with_trailing_slash = ensure_trailing_slash(&layout.krate).to_string();
-    let mut themes: Vec<String> = style_files
-        .iter()
-        .map(StylePath::basename)
-        .collect::<Result<_, Error>>()
-        .unwrap_or_default();
+    let mut themes: Vec<String> =
+        style_files.iter().map(|s| s.path.display().to_string()).collect();
+    themes.push(static_files::themes::LIGHT.to_string());
+    themes.push(static_files::themes::DARK.to_string());
+    themes.push(static_files::themes::AYU.to_string());
     themes.sort();
+    let css = vec![&static_files::NORMALIZE_CSS, &static_files::RUSTDOC_CSS];
+
     let rustdoc_version = rustc_interface::util::version_str().unwrap_or("unknown version");
     let content = Buffer::html().to_display(t); // Note: This must happen before making the sidebar.
     let sidebar = Buffer::html().to_display(sidebar);
@@ -74,6 +95,32 @@ pub(crate) fn render<T: Print, S: Print>(
         static_root_path,
         page,
         layout,
+        font_preloads: vec![
+            &static_files::source_serif_4::REGULAR,
+            &static_files::source_serif_4::BOLD,
+            &static_files::fira_sans::REGULAR,
+            &static_files::fira_sans::MEDIUM,
+            &static_files::source_code_pro::REGULAR,
+            &static_files::source_code_pro::SEMIBOLD,
+        ],
+
+        storage_js: &static_files::STORAGE_JS,
+        main_js: &static_files::MAIN_JS,
+        source_script_js: &static_files::sidebar::SOURCE_SCRIPT,
+        scrape_examples_js: &static_files::SCRAPE_EXAMPLES_JS,
+
+        search_js: &static_files::SEARCH_JS,
+        settings_js: &static_files::SETTINGS_JS,
+        settings_css: &static_files::SETTINGS_CSS,
+
+        favicon_svg: &static_files::RUST_FAVICON_SVG,
+        favicon_png_16: &static_files::RUST_FAVICON_PNG_16,
+        favicon_png_32: &static_files::RUST_FAVICON_PNG_32,
+
+        rust_logo_svg: &static_files::RUST_LOGO_SVG,
+        wheel_svg: &static_files::WHEEL_SVG,
+
+        css,
         themes,
         sidebar,
         content,

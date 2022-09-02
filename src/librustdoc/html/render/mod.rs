@@ -339,7 +339,7 @@ impl AllTypes {
 }
 
 fn scrape_examples_help(shared: &SharedContext<'_>) -> String {
-    let mut content = SCRAPE_EXAMPLES_HELP_MD.to_owned();
+    let mut content = SCRAPE_EXAMPLES_HELP_MD.as_str().to_owned();
     content.push_str(&format!(
       "## More information\n\n\
       If you want more information about this feature, please read the [corresponding chapter in the Rustdoc book]({}/rustdoc/scraped-examples.html).",
