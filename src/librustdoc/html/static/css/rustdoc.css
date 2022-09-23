@@ -349,11 +349,13 @@ main {
 
 .main-heading,
 .item-decl,
-#main-content > details > summary,
-#main-content > details > .docblock,
+.sub-container,
+.top-doc.rustdoc-toggle,
 #main-content > h2,
 #main-content > div > details > summary,
-#main-content > div > details > div {
+#main-content > div > details > div:not(.impl-items),
+#main-content > div > details > .impl-items > details > summary,
+#main-content > div > details > .impl-items > details > div {
 	margin-left: 45px;
 }
 
@@ -1658,7 +1660,7 @@ details.rustdoc-toggle > summary.hideme::before {
 details.rustdoc-toggle > summary:not(.hideme)::before {
 	position: absolute;
 	left: 25px;
-	top: 4px;
+	top: 13px;
 }
 
 .impl-items > details.rustdoc-toggle > summary:not(.hideme)::before {
