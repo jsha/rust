@@ -343,8 +343,18 @@ button {
 main {
 	position: relative;
 	flex-grow: 1;
-	padding: 10px 15px 40px 45px;
+	padding: 10px 15px 40px 0px;
 	min-width: 0;
+}
+
+.main-heading,
+.item-decl,
+#main-content > details > summary,
+#main-content > details > .docblock,
+#main-content > h2,
+#main-content > div > details > summary,
+#main-content > div > details > div {
+	margin-left: 45px;
 }
 
 .source main {
@@ -1647,13 +1657,13 @@ details.rustdoc-toggle > summary.hideme::before {
 
 details.rustdoc-toggle > summary:not(.hideme)::before {
 	position: absolute;
-	left: -24px;
+	left: 25px;
 	top: 4px;
 }
 
 .impl-items > details.rustdoc-toggle > summary:not(.hideme)::before {
 	position: absolute;
-	left: -24px;
+	left: 25px;
 }
 
 /* When a "hideme" summary is open and the "Expand description" or "Show
@@ -1675,7 +1685,7 @@ details.rustdoc-toggle[open] > summary.hideme > span {
 
 details.rustdoc-toggle[open] > summary::before,
 details.rustdoc-toggle[open] > summary.hideme::before {
-	background-image: /* AUTOREPLACE: */url("toggle-minus.svg");
+	background-image: url("toggle-minus1.66.0.svg");
 }
 
 details.rustdoc-toggle > summary::before {
