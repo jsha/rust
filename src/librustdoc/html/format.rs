@@ -140,10 +140,6 @@ impl Buffer {
         self.for_html
     }
 
-    pub(crate) fn reserve(&mut self, additional: usize) {
-        self.buffer.reserve(additional)
-    }
-
     pub(crate) fn len(&self) -> usize {
         self.buffer.len()
     }
@@ -1150,7 +1146,92 @@ impl clean::BareFunctionDecl {
     }
 }
 
-// Implements Write but only counts the bytes "written".
+/// This is a simplified HTML processor, intended for counting the number of characters
+/// of text that a stream of HTML is equivalent to. This is used to calculate the width
+/// (in characters) of a function declaration, to decide whether to line-wrap it like
+/// rustfmt would do. It's only valid for use with HTML emitted from within this module,
+/// so it is intentionally not pub(crate).
+///
+/// This makes some assumptions that are specifically tied to the HTML emitted in format.rs:
+///  - Whitespace is significant.
+///  - All tags display their contents as text.
+///  - Each call to write() contains a sequence of bytes that is valid UTF-8 on its own.
+///  - All '<' in HTML attributes are escaped.
+///  - Only named character references (entities) are used, and only with lowercase names:
+///    https://html.spec.whatwg.org/multipage/named-characters.html#named-character-references
+#[derive(Debug, Clone)]
+struct HtmlRemover<W: fmt::Write> {
+    inner: W,
+    state: HtmlTextCounterState,
+}
+
+impl<W: fmt::Write> HtmlRemover<W> {
+    fn new(w: W) -> Self {
+        HtmlRemover { inner: w, state: HtmlTextCounterState::Text }
+    }
+}
+
+// A state machine that tracks our progress through the HTML.
+#[derive(Debug, Clone)]
+enum HtmlTextCounterState {
+    Text,
+    // A small buffer to store the entity name
+    Entity(u8, [u8; 3]),
+    Tag,
+}
+
+impl<W: fmt::Write> fmt::Write for HtmlRemover<W> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        use HtmlTextCounterState::*;
+        for c in s.chars() {
+            match (&mut self.state, c) {
+                (Text, '<') => self.state = Tag,
+                (Text, '&') => self.state = Entity(0, [0; 3]),
+                (Text, _) => write!(self.inner, "{c}").unwrap(),
+                // Note: `>` can occur in attribute values, but we always escape
+                // them internally, so we don't have to have an extra state for
+                // "in attribute value."
+                // https://www.w3.org/TR/2011/WD-html5-20110525/syntax.html#syntax-attributes
+                (Tag, '>') => self.state = Text,
+                (Tag, '<') => Err(fmt::Error)?,
+                (Tag, _) => {}
+                // Read one character of an entity name
+                (Entity(ref mut len, ref mut arr), 'a'..='z') => {
+                    if *len as usize > arr.len() - 1 {
+                        Err(fmt::Error)?;
+                    }
+                    arr[*len as usize] = c as u8;
+                    *len += 1;
+                }
+                // Finish an entity
+                (Entity(len, arr), ';') => {
+                    let emit = match std::str::from_utf8(&arr[0..*len as usize]).unwrap() {
+                        "lt" => '<',
+                        "gt" => '>',
+                        "amp" => '&',
+                        _ => Err(fmt::Error)?,
+                    };
+                    write!(self.inner, "{emit}").unwrap();
+                    self.state = Text;
+                }
+                (Entity(_, _), _) => Err(fmt::Error)?,
+            }
+        }
+        Ok(())
+    }
+}
+
+/// This generates the plain text form of a marked-up HTML input, using HtmlRemover.
+struct Plain<D: fmt::Display>(D);
+
+impl<D: fmt::Display> fmt::Display for Plain<D> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut remover = HtmlRemover::new(f);
+        write!(&mut remover, "{}", self.0)
+    }
+}
+
+/// Implements Write but only counts the bytes "written".
 struct WriteCounter(usize);
 
 impl std::fmt::Write for WriteCounter {
@@ -1160,7 +1241,7 @@ impl std::fmt::Write for WriteCounter {
     }
 }
 
-// Implements Display by emitting the given number of spaces.
+/// Implements Display by emitting the given number of spaces.
 struct Indent(usize);
 
 impl fmt::Display for Indent {
@@ -1189,28 +1270,24 @@ impl clean::FnDecl {
         })
     }
 
-    /// * `header_len`: The length of the function header and name. In other words, the number of
-    ///   characters in the function declaration up to but not including the parentheses.
-    ///   This is expected to go into a `<pre>`/`code-header` block, so indentation and newlines
-    ///   are preserved.
+    /// * `header`: Prints the function header and name (everything before the params).
     /// * `indent`: The number of spaces to indent each successive line with, if line-wrapping is
     ///   necessary.
     pub(crate) fn full_print<'a, 'tcx: 'a>(
         &'a self,
-        header_len: usize,
+        header: impl fmt::Display + 'a,
         indent: usize,
         cx: &'a Context<'tcx>,
     ) -> impl fmt::Display + 'a + Captures<'tcx> {
         display_fn(move |f| {
             // First, generate the text form of the declaration, with no line wrapping, and count the bytes.
+            let header = Plain(header);
+            let decl = Plain(display_fn(|f| self.inner_full_print(None, f, cx)));
             let mut counter = WriteCounter(0);
-            write!(&mut counter, "{:#}", display_fn(|f| { self.inner_full_print(None, f, cx) }))
-                .unwrap();
+            write!(&mut counter, "{header}{decl}").unwrap();
             // If the text form was over 80 characters wide, we will line-wrap our output.
-            let line_wrapping_indent =
-                if header_len + counter.0 > 80 { Some(indent) } else { None };
-            // Generate the final output. This happens to accept `{:#}` formatting to get textual
-            // output but in practice it is only formatted with `{}` to get HTML output.
+            let line_wrapping_indent = (counter.0 > 80).then_some(indent);
+            // Generate the final output.
             self.inner_full_print(line_wrapping_indent, f, cx)
         })
     }
@@ -1474,12 +1551,9 @@ impl clean::TypeBinding {
 }
 
 pub(crate) fn print_abi_with_space(abi: Abi) -> impl fmt::Display {
-    display_fn(move |f| {
-        let quot = "&quot;";
-        match abi {
-            Abi::Rust => Ok(()),
-            abi => write!(f, "extern {0}{1}{0} ", quot, abi.name()),
-        }
+    display_fn(move |f| match abi {
+        Abi::Rust => Ok(()),
+        abi => write!(f, "extern \"{}\" ", abi.name()),
     })
 }
 
@@ -1528,4 +1602,38 @@ pub(crate) fn display_fn(
     }
 
     WithFormatter(Cell::new(Some(f)))
+}
+
+#[test]
+fn test_html_remover() {
+    use std::fmt::Write;
+
+    fn assert_removed_eq(input: &str, output: &str) {
+        let mut remover = HtmlRemover::new(String::new());
+        write!(&mut remover, "{}", input).unwrap();
+        assert_eq!(&remover.inner, output);
+    }
+
+    assert_removed_eq("a<a href='https://example.com'>b", "ab");
+    assert_removed_eq("alpha &lt;bet&gt;", "alpha <bet>");
+    assert_removed_eq("<a href=\"&quot;\">", "");
+    assert_removed_eq("<tag>&gt;</tag>text&lt;<tag>", ">text<");
+
+    let mut remover = HtmlRemover::new(String::new());
+    assert!(write!(&mut remover, "&ent;").is_err());
+
+    let mut remover = HtmlRemover::new(String::new());
+    assert!(write!(&mut remover, "&entity").is_err());
+
+    let mut remover = HtmlRemover::new(String::new());
+    assert!(write!(&mut remover, "&&").is_err());
+
+    let mut remover = HtmlRemover::new(String::new());
+    assert!(write!(&mut remover, "<open <tag").is_err());
+}
+
+#[test]
+fn test_plain() {
+    let d = Plain::new("<strong>alpha</strong> &lt;bet&gt;");
+    assert_eq!(&d.to_string(), "alpha <bet>");
 }
