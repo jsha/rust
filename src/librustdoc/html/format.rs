@@ -9,6 +9,7 @@ use std::borrow::Cow;
 use std::cell::Cell;
 use std::fmt;
 use std::iter::{self, once};
+use std::io::Write;
 
 use rustc_ast as ast;
 use rustc_attr::{ConstStability, StabilityLevel};
@@ -1306,6 +1307,19 @@ impl clean::BareFunctionDecl {
     }
 }
 
+// Implements Write but only counts the bytes "written".
+struct WriteCounter(usize);
+
+impl std::io::Write for WriteCounter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0 += buf.len();
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 impl clean::FnDecl {
     pub(crate) fn print<'b, 'a: 'b, 'tcx: 'a>(
         &'a self,
@@ -1345,95 +1359,106 @@ impl clean::FnDecl {
         indent: usize,
         cx: &'a Context<'tcx>,
     ) -> impl fmt::Display + 'a + Captures<'tcx> {
-        display_fn(move |f| self.inner_full_print(header_len, indent, f, cx))
+        display_fn(move |f| {
+            // First, generate the text form of the declaration, with no line wrapping, and count the bytes.
+            let mut counter = WriteCounter(0);
+            write!(&mut counter, "{:#}", display_fn(|f| {
+                self.inner_full_print(None, f, cx)
+            })).unwrap();
+            // If the text form was over 80 characters wide, we will line-wrap our output.
+            let line_wrapping_indent = if header_len + counter.0 > 80 {
+                Some(indent)
+            } else {
+                None
+            };
+            // Whether or not we line-wrap the output, we will generate the final output in text or HTML
+            // based on what the formatter requested.
+            self.inner_full_print(line_wrapping_indent, f, cx)
+        })
     }
 
     fn inner_full_print(
         &self,
-        header_len: usize,
-        indent: usize,
+        // For None, the declaration will not be line-wrapped. For Some(n),
+        // the declaration will be line-wrapped, with an indent of n spaces.
+        line_wrapping_indent: Option<usize>,
         f: &mut fmt::Formatter<'_>,
         cx: &Context<'_>,
     ) -> fmt::Result {
-        let amp = if f.alternate() { "&" } else { "&amp;" };
+        let html = !f.alternate();
+        let amp = if html { "&amp;" } else { "&" };
+
+        let arg_separator: Cow<'static, str> = match line_wrapping_indent {
+            None => ", ".into(),
+            Some(0) => ",\n    ".into(),
+            Some(4) => ",\n        ".into(),
+            Some(n) => format!(",\n{}", " ".repeat(n+4)).into(),
+        };
+
         let mut args = Buffer::html();
-        let mut args_plain = Buffer::new();
+
+        write!(args, "(");
+        match line_wrapping_indent {
+            None => {},
+            Some(0) => write!(args, "\n    "),
+            Some(4) => write!(args, "\n        "),
+            Some(n) => write!(args, "\n{}", " ".repeat(n+4)).into(),
+        };
         for (i, input) in self.inputs.values.iter().enumerate() {
+            if i > 0 {
+                args.push_str(&arg_separator);
+            }
             if let Some(selfty) = input.to_self() {
                 match selfty {
                     clean::SelfValue => {
                         args.push_str("self");
-                        args_plain.push_str("self");
                     }
                     clean::SelfBorrowed(Some(ref lt), mtbl) => {
                         write!(args, "{}{} {}self", amp, lt.print(), mtbl.print_with_space());
-                        write!(args_plain, "&{} {}self", lt.print(), mtbl.print_with_space());
                     }
                     clean::SelfBorrowed(None, mtbl) => {
                         write!(args, "{}{}self", amp, mtbl.print_with_space());
-                        write!(args_plain, "&{}self", mtbl.print_with_space());
                     }
                     clean::SelfExplicit(ref typ) => {
-                        if f.alternate() {
-                            write!(args, "self: {:#}", typ.print(cx));
+                        write!(args, "self: ");
+                        if html {
+                            write!(args, "{}", typ.print(cx));
                         } else {
-                            write!(args, "self: {}", typ.print(cx));
+                            write!(args, "{:#}", typ.print(cx));
                         }
-                        write!(args_plain, "self: {:#}", typ.print(cx));
                     }
                 }
             } else {
-                if i > 0 {
-                    args.push_str("\n");
-                }
                 if input.is_const {
                     args.push_str("const ");
-                    args_plain.push_str("const ");
                 }
                 write!(args, "{}: ", input.name);
-                write!(args_plain, "{}: ", input.name);
-
-                if f.alternate() {
-                    write!(args, "{:#}", input.type_.print(cx));
-                } else {
+                if html {
                     write!(args, "{}", input.type_.print(cx));
+                } else {
+                    write!(args, "{:#}", input.type_.print(cx));
                 }
-                write!(args_plain, "{:#}", input.type_.print(cx));
-            }
-            if i + 1 < self.inputs.values.len() {
-                args.push_str(",");
-                args_plain.push_str(",");
             }
         }
-
-        let mut args_plain = format!("({})", args_plain.into_inner());
-        let mut args = args.into_inner();
 
         if self.c_variadic {
-            args.push_str(",\n ...");
-            args_plain.push_str(", ...");
+            args.push_str(&arg_separator);
+            args.push_str("...");
         }
 
-        let arrow_plain = format!("{:#}", self.output.print(cx));
-        let arrow =
-            if f.alternate() { arrow_plain.clone() } else { format!("{}", self.output.print(cx)) };
-
-        let declaration_len = header_len + args_plain.len() + arrow_plain.len();
-        let output = if declaration_len > 80 {
-            let full_pad = format!("\n{}", " ".repeat(indent + 4));
-            let close_pad = format!("\n{}", " ".repeat(indent));
-            format!(
-                "({pad}{args}{close}){arrow}",
-                pad = if self.inputs.values.is_empty() { "" } else { &full_pad },
-                args = args.replace('\n', &full_pad),
-                close = close_pad,
-                arrow = arrow
-            )
-        } else {
-            format!("({args}){arrow}", args = args.replace('\n', " "), arrow = arrow)
+        match line_wrapping_indent {
+            None => args.push_str(")"),
+            Some(0) => args.push_str("\n)"),
+            Some(4) => args.push_str("\n    )"),
+            Some(n) => write!(args, "\n{})", " ".repeat(n)),
         };
 
-        write!(f, "{}", output)
+        if html {
+            write!(args, "{}", self.output.print(cx));
+        } else {
+            write!(args, "{:#}", self.output.print(cx));
+        }
+        write!(f, "{}", args.into_inner())
     }
 }
 
