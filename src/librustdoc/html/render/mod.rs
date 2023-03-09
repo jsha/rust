@@ -61,6 +61,7 @@ use rustc_span::{
 };
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Serialize, Serializer};
+use askama::Template;
 
 use crate::clean::{self, ItemId, RenderedLink, SelfTy};
 use crate::error::Error;
@@ -806,7 +807,7 @@ fn assoc_method(
 ) {
     let tcx = cx.tcx();
     let header = meth.fn_header(tcx).expect("Trying to get header from a non-function item");
-    let name = meth.name.as_ref().unwrap();
+    let name = meth.name.as_ref().unwrap().as_str();
     let vis = visibility_print_with_space(meth.visibility(tcx), meth.item_id, cx).to_string();
     // FIXME: Once https://github.com/rust-lang/rust/issues/67792 is implemented, we can remove
     // this condition.
@@ -831,7 +832,7 @@ fn assoc_method(
         + unsafety.len()
         + defaultness.len()
         + abi.len()
-        + name.as_str().len()
+        + name.len()
         + generics_len;
 
     let notable_traits = d.output.as_return().and_then(|output| notable_traits_button(output, cx));
@@ -846,24 +847,41 @@ fn assoc_method(
         (0, "", Ending::Newline)
     };
     w.reserve(header_len + "<a href=\"\" class=\"fn\">{".len() + "</a>".len());
-    write!(
-        w,
-        "{indent}{vis}{constness}{asyncness}{unsafety}{defaultness}{abi}fn <a{href} class=\"fn\">{name}</a>\
-         {generics}{decl}{notable_traits}{where_clause}",
-        indent = indent_str,
-        vis = vis,
-        constness = constness,
-        asyncness = asyncness,
-        unsafety = unsafety,
-        defaultness = defaultness,
-        abi = abi,
-        href = href,
-        name = name,
-        generics = g.print(cx),
-        decl = d.full_print(header_len, indent, cx),
-        notable_traits = notable_traits.unwrap_or_default(),
-        where_clause = print_where_clause(g, cx, indent, end_newline),
-    );
+    let template = AssocMethod {
+        indent_str,
+        vis,
+        constness,
+        asyncness,
+        unsafety,
+        defaultness,
+        abi: print_abi_with_space(header.abi).to_string(),
+        href,
+        name,
+        generics: g.print(cx),
+        decl: d.full_print(header_len, indent, cx),
+        notable_traits: notable_traits.unwrap_or_default(),
+        where_clause: print_where_clause(g, cx, indent, end_newline),
+    };
+    template.render_into(w).unwrap();
+}
+
+#[derive(Template)]
+#[template(path = "assoc_method.html")]
+struct AssocMethod<'a, A, B, C>
+where A: fmt::Display, B:fmt::Display, C:fmt::Display{
+    indent_str: &'a str,
+    vis: String,
+    constness: &'a str,
+    asyncness: &'a str,
+    unsafety: &'a str,
+    defaultness: &'a str,
+    abi: String,
+    href: String,
+    name: &'a str,
+    generics: A,
+    decl: B,
+    notable_traits: String,
+    where_clause: C,
 }
 
 /// Writes a span containing the versions at which an item became stable and/or const-stable. For
