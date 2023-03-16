@@ -1024,6 +1024,14 @@ impl clean::Type {
     ) -> impl fmt::Display + 'b + Captures<'tcx> {
         display_fn(move |f| fmt_type(self, f, false, cx))
     }
+
+    /// Emit this type in plain text form (no HTML).
+    pub(crate) fn print_plain<'b, 'a: 'b, 'tcx: 'a>(
+        &'a self,
+        cx: &'a Context<'tcx>,
+    ) -> impl fmt::Display + 'b + Captures<'tcx> {
+        Plain(self.print(cx))
+    }
 }
 
 impl clean::Path {
@@ -1032,6 +1040,14 @@ impl clean::Path {
         cx: &'a Context<'tcx>,
     ) -> impl fmt::Display + 'b + Captures<'tcx> {
         display_fn(move |f| resolved_path(f, self.def_id(), self, false, false, cx))
+    }
+
+    /// Emit this type in plain text form (no HTML).
+    pub(crate) fn print_plain<'b, 'a: 'b, 'tcx: 'a>(
+        &'a self,
+        cx: &'a Context<'tcx>,
+    ) -> impl fmt::Display + 'b + Captures<'tcx> {
+        Plain(self.print(cx))
     }
 }
 
@@ -1160,14 +1176,19 @@ impl clean::BareFunctionDecl {
 ///  - Only named character references (entities) are used, and only with lowercase names:
 ///    https://html.spec.whatwg.org/multipage/named-characters.html#named-character-references
 #[derive(Debug, Clone)]
-struct HtmlRemover<W: fmt::Write> {
+pub(super) struct HtmlRemover<W: fmt::Write> {
     inner: W,
     state: HtmlTextCounterState,
 }
 
 impl<W: fmt::Write> HtmlRemover<W> {
-    fn new(w: W) -> Self {
+    pub(super) fn new(w: W) -> Self {
         HtmlRemover { inner: w, state: HtmlTextCounterState::Text }
+    }
+
+    #[cfg(test)]
+    pub(super) fn into_inner(self) -> W {
+        self.inner
     }
 }
 
@@ -1222,7 +1243,7 @@ impl<W: fmt::Write> fmt::Write for HtmlRemover<W> {
 }
 
 /// This generates the plain text form of a marked-up HTML input, using HtmlRemover.
-struct Plain<D: fmt::Display>(D);
+pub(super) struct Plain<D: fmt::Display>(pub(super) D);
 
 impl<D: fmt::Display> fmt::Display for Plain<D> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1602,38 +1623,4 @@ pub(crate) fn display_fn(
     }
 
     WithFormatter(Cell::new(Some(f)))
-}
-
-#[test]
-fn test_html_remover() {
-    use std::fmt::Write;
-
-    fn assert_removed_eq(input: &str, output: &str) {
-        let mut remover = HtmlRemover::new(String::new());
-        write!(&mut remover, "{}", input).unwrap();
-        assert_eq!(&remover.inner, output);
-    }
-
-    assert_removed_eq("a<a href='https://example.com'>b", "ab");
-    assert_removed_eq("alpha &lt;bet&gt;", "alpha <bet>");
-    assert_removed_eq("<a href=\"&quot;\">", "");
-    assert_removed_eq("<tag>&gt;</tag>text&lt;<tag>", ">text<");
-
-    let mut remover = HtmlRemover::new(String::new());
-    assert!(write!(&mut remover, "&ent;").is_err());
-
-    let mut remover = HtmlRemover::new(String::new());
-    assert!(write!(&mut remover, "&entity").is_err());
-
-    let mut remover = HtmlRemover::new(String::new());
-    assert!(write!(&mut remover, "&&").is_err());
-
-    let mut remover = HtmlRemover::new(String::new());
-    assert!(write!(&mut remover, "<open <tag").is_err());
-}
-
-#[test]
-fn test_plain() {
-    let d = Plain::new("<strong>alpha</strong> &lt;bet&gt;");
-    assert_eq!(&d.to_string(), "alpha <bet>");
 }
